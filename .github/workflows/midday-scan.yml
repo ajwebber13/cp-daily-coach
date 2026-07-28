@@ -1,0 +1,28 @@
+name: Midday Check-In
+
+on:
+  schedule:
+    # 17:00 UTC = 12:00 PM ET during daylight saving (1:00 PM ET during
+    # standard time, since GitHub cron doesn't shift with DST).
+    - cron: '0 17 * * 1-5'   # weekdays only
+  workflow_dispatch: {}       # lets you trigger it manually from the Actions tab
+
+jobs:
+  midday:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run midday check-in
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python midday.py
