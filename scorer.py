@@ -90,11 +90,14 @@ def entry_stop_target(row) -> dict:
     return {"entry": round(entry, 2), "stop": round(stop, 2), "target": round(target, 2)}
 
 
-def evaluate_ticker(ticker: str, row, held_position: dict = None) -> dict:
+def evaluate_ticker(ticker: str, row, held_position: dict = None, min_score: float = None) -> dict:
     """
     row: latest indicator row for this ticker (pandas Series)
     held_position: dict from positions.json if currently held, else None
+    min_score: overrides config.BUY_SCORE_MIN for this call (used by the
+        market regime filter to raise the bar when SPY/QQQ are weak)
     """
+    min_score = config.BUY_SCORE_MIN if min_score is None else min_score
     score = compute_score(row)
 
     if held_position:
@@ -124,7 +127,7 @@ def evaluate_ticker(ticker: str, row, held_position: dict = None) -> dict:
         }
 
     # Not held — evaluate as a potential new entry
-    if trend_aligned(row) and score["total"] >= config.BUY_SCORE_MIN:
+    if trend_aligned(row) and score["total"] >= min_score:
         levels = entry_stop_target(row)
         return {
             "ticker": ticker, "signal": "BUY", "score": score["total"],

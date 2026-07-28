@@ -20,6 +20,8 @@ import positions
 from indicators import add_indicators
 from scorer import evaluate_ticker
 from discord_alert import format_message, send_to_discord
+from ai_reasoning import add_reasoning_to_results
+from market_regime import get_market_regime
 
 
 def batch_download(tickers: list) -> dict:
@@ -57,6 +59,11 @@ def batch_download(tickers: list) -> dict:
 
 
 def run_scan():
+    print("Checking overall market trend (SPY/QQQ)...")
+    regime = get_market_regime()
+    print(f"Market regime: {regime['label']}")
+    min_score = config.BUY_SCORE_MIN + regime["score_adjustment"]
+
     print("Loading S&P 500 universe...")
     tickers = universe.get_sp500_tickers()
 
@@ -81,14 +88,19 @@ def run_scan():
             if result["signal"] == "SELL":
                 positions.remove_position(ticker)
         else:
-            result = evaluate_ticker(ticker, latest_row, held_position=None)
+            result = evaluate_ticker(ticker, latest_row, held_position=None, min_score=min_score)
             if result["signal"] == "BUY":
                 buy_candidates.append(result)
 
     buy_candidates.sort(key=lambda x: x["score"], reverse=True)
     top_buys = buy_candidates[:config.TOP_N_RESULTS]
 
-    message = format_message(top_buys, held_results)
+    if config.AI_REASONING_ENABLED:
+        print("Generating AI reasoning for top picks...")
+        add_reasoning_to_results(top_buys)
+        add_reasoning_to_results(held_results)
+
+    message = format_message(top_buys, held_results, market_label=regime["label"])
     send_to_discord(message)
 
     print(f"\nDone. {len(top_buys)} BUY candidates, {len(held_results)} held positions checked.")

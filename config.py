@@ -26,6 +26,10 @@ RELVOL_PERIOD = 20
 BUY_SCORE_MIN = 70               # confidence score needed to flag a BUY
 TOP_N_RESULTS = 15               # how many BUY candidates to show, ranked by score
 
+# --- Market regime (Upgrade #1: don't fight the tape) ---
+MARKET_MIXED_PENALTY = 5         # added to BUY_SCORE_MIN when SPY/QQQ disagree
+MARKET_BEARISH_PENALTY = 10      # added to BUY_SCORE_MIN when both are trending down
+
 # --- Entry / stop / target ---
 ATR_STOP_MULT = 2.0
 ATR_TARGET_MULT = 3.0            # gives roughly 1.5:1 reward-to-risk (see scorer.py)

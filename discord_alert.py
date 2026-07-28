@@ -8,8 +8,10 @@ import requests
 import config
 
 
-def format_message(buy_signals: list, held_signals: list) -> str:
+def format_message(buy_signals: list, held_signals: list, market_label: str = None) -> str:
     lines = ["**📊 Daily Stock Coach**"]
+    if market_label:
+        lines.append(market_label)
 
     sells = [s for s in held_signals if s["signal"] == "SELL"]
     holds = [s for s in held_signals if s["signal"] == "HOLD"]
