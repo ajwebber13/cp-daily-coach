@@ -11,6 +11,13 @@ Separate project from `cp-stock-signal-engine` (live ML system) and
 wasn't worth it yet). This is the coach — a decision-support tool, not a
 trading system.
 
+Two scans, two purposes:
+- **`scan.py`** (after close) — the main BUY/SELL/HOLD/DO NOTHING signals
+  with entry/stop/target and a confidence score.
+- **`premarket.py`** (before open) — awareness only, no scoring. Flags any
+  S&P 500 ticker moving 3%+ before the bell so you know what's in motion.
+  Not a buy/sell signal by itself — just tells you where the action is.
+
 ## Setup
 
 ```bash
@@ -72,7 +79,25 @@ A BUY signal requires trend alignment **and** a score of 70+
 probability — a 92 means 92% of the defined conditions are met, not a 92%
 chance of being right.
 
-## Automating the daily run (optional, once you trust it)
+## Automating the daily run (GitHub Actions — recommended)
+
+Runs automatically on GitHub's servers, no need to keep your own PC on.
+
+1. Create a new GitHub repo (private is fine) and push these files to it,
+   including the `.github/workflows/daily-scan.yml` file.
+2. In the repo: **Settings → Secrets and variables → Actions → New repository secret**
+   - Name: `DISCORD_WEBHOOK_URL`
+   - Value: your webhook URL
+3. That's it. It runs weekdays at 21:00 UTC (4-5 PM ET, after market close)
+   and posts straight to Discord. Change the `cron` line in the workflow
+   file if you want a different time.
+4. To test it immediately instead of waiting: go to the **Actions** tab →
+   **Daily Stock Coach** → **Run workflow**.
+
+`positions.json` gets committed back to the repo automatically after each
+run, so HOLD/SELL tracking persists between runs.
+
+## Automating the daily run (Windows Task Scheduler — local alternative)
 
 Windows Task Scheduler, daily after market close:
 ```powershell
@@ -88,7 +113,8 @@ indicators.py        - EMA/SMA/RSI/ATR/volume calculations
 scorer.py             - confidence scoring + BUY/SELL/HOLD/DO NOTHING logic
 positions.py           - tracks what you're actually holding
 discord_alert.py        - formats and sends the daily message
-scan.py                  - main entry point, run this daily
+scan.py                  - main entry point, run this daily (after close)
+premarket.py              - pre-market movers scan, run before open
 test_synthetic.py         - sanity check with fake data, no network needed
 ```
 

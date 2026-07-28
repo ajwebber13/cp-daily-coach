@@ -39,5 +39,9 @@ WEIGHT_VOLATILITY = 20
 # --- Position tracking ---
 POSITIONS_FILE = "positions.json"
 
+# --- Pre-market movers ---
+PREMARKET_MOVE_THRESHOLD = 3.0    # minimum % move (up or down) to flag a ticker
+PREMARKET_TOP_N = 15              # gainers and losers shown, each
+
 # --- Discord ---
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
