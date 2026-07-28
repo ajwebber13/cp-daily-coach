@@ -6,10 +6,11 @@ Turns the latest indicator values into:
   - entry, stop, and target prices when relevant
 
 Score breakdown (must sum to 100 — see config.py to change weights):
-  Trend alignment   (40 pts) - is price in a confirmed uptrend?
-  Volume            (20 pts) - is today's move backed by real volume?
-  RSI positioning   (20 pts) - is momentum healthy, not overbought/oversold?
-  Volatility        (20 pts) - is the stock calm enough for a clean stop/target?
+  Trend alignment      (35 pts) - is price in a confirmed uptrend?
+  Volume               (15 pts) - is today's move backed by real volume?
+  RSI positioning       (15 pts) - is momentum healthy, not overbought/oversold?
+  Volatility            (15 pts) - is the stock calm enough for a clean stop/target?
+  Support/Resistance   (20 pts) - is there room to run before the 52-week high?
 
 This is a heuristic, not a probability. A 92 doesn't mean "92% chance of
 being right" — it means 92% of the defined conditions for a clean, healthy
@@ -17,6 +18,7 @@ trend-following entry are currently true. Treat it as a ranking signal
 between tickers, not a statement of certainty.
 """
 import numpy as np
+import pandas as pd
 
 import config
 
@@ -58,18 +60,60 @@ def score_volatility(row) -> float:
     return scaled * config.WEIGHT_VOLATILITY
 
 
-def compute_score(row) -> dict:
+def score_support_resistance(row) -> float:
+    """
+    Checks distance to the 52-week high — a classic resistance level.
+      - At or above the 52-week high: fresh breakout, full points.
+      - Within 2% below it, but hasn't broken through: caution — buying
+        right under an unbroken ceiling is riskier, low points.
+      - Further below: more room to run before hitting that ceiling,
+        scaled up to full points at 15%+ away.
+    """
+    high_52wk = row["fifty_two_wk_high"]
+    close = row["close"]
+    if pd.isna(high_52wk) or high_52wk <= 0:
+        return 0.0
+
+    if close >= high_52wk:
+        return config.WEIGHT_SUPPORT_RESISTANCE
+
+    distance_pct = (high_52wk - close) / high_52wk * 100
+    if distance_pct <= 2:
+        return config.WEIGHT_SUPPORT_RESISTANCE * 0.25
+
+    scaled = min(distance_pct / 15, 1.0)
+    return config.WEIGHT_SUPPORT_RESISTANCE * scaled
+
+
+def score_sector(sector_bullish: bool | None) -> float:
+    """
+    "Strong stocks usually belong to strong sectors." sector_bullish is
+    whether the ticker's matching sector ETF (XLK, XLF, etc.) is itself
+    trending up. If we don't know the sector (missing mapping or data
+    fetch failed), give half credit — don't punish a ticker for a data
+    gap that isn't about the stock itself.
+    """
+    if sector_bullish is None:
+        return config.WEIGHT_SECTOR * 0.5
+    return config.WEIGHT_SECTOR if sector_bullish else 0.0
+
+
+def compute_score(row, sector_bullish: bool | None = None) -> dict:
     trend = score_trend(row)
     volume = score_volume(row)
     rsi = score_rsi(row)
     volatility = score_volatility(row)
-    total = round(trend + volume + rsi + volatility, 1)
+    support_resistance = score_support_resistance(row)
+    sector = score_sector(sector_bullish)
+    total = round(trend + volume + rsi + volatility + support_resistance + sector, 1)
     return {
         "total": total,
         "trend": round(trend, 1),
         "volume": round(volume, 1),
         "rsi": round(rsi, 1),
         "volatility": round(volatility, 1),
+        "support_resistance": round(support_resistance, 1),
+        "sector": round(sector, 1),
     }
 
 
@@ -90,15 +134,18 @@ def entry_stop_target(row) -> dict:
     return {"entry": round(entry, 2), "stop": round(stop, 2), "target": round(target, 2)}
 
 
-def evaluate_ticker(ticker: str, row, held_position: dict = None, min_score: float = None) -> dict:
+def evaluate_ticker(ticker: str, row, held_position: dict = None, min_score: float = None,
+                     sector_bullish: bool = None) -> dict:
     """
     row: latest indicator row for this ticker (pandas Series)
     held_position: dict from positions.json if currently held, else None
     min_score: overrides config.BUY_SCORE_MIN for this call (used by the
         market regime filter to raise the bar when SPY/QQQ are weak)
+    sector_bullish: whether this ticker's sector ETF is trending up
+        (None if unknown — see score_sector())
     """
     min_score = config.BUY_SCORE_MIN if min_score is None else min_score
-    score = compute_score(row)
+    score = compute_score(row, sector_bullish=sector_bullish)
 
     if held_position:
         # Already in this trade — check for an exit trigger

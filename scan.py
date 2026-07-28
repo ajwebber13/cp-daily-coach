@@ -22,6 +22,8 @@ from scorer import evaluate_ticker
 from discord_alert import format_message, send_to_discord
 from ai_reasoning import add_reasoning_to_results
 from market_regime import get_market_regime
+from sector_strength import load_sector_map, get_sector_trends
+from earnings_check import filter_imminent_earnings
 
 
 def batch_download(tickers: list) -> dict:
@@ -64,6 +66,10 @@ def run_scan():
     print(f"Market regime: {regime['label']}")
     min_score = config.BUY_SCORE_MIN + regime["score_adjustment"]
 
+    print("Checking sector strength...")
+    sector_map = load_sector_map()
+    sector_trends = get_sector_trends()
+
     print("Loading S&P 500 universe...")
     tickers = universe.get_sp500_tickers()
 
@@ -79,21 +85,33 @@ def run_scan():
     for ticker, df in price_data.items():
         df = add_indicators(df)
         latest_row = df.iloc[-1]
+        sector_etf = sector_map.get(ticker)
+        sector_bullish = sector_trends.get(sector_etf) if sector_etf else None
 
         if ticker in held:
             positions.update_highest_close(ticker, latest_row["close"])
             held = positions.list_positions()  # reload after update
-            result = evaluate_ticker(ticker, latest_row, held_position=held[ticker])
+            result = evaluate_ticker(ticker, latest_row, held_position=held[ticker],
+                                      sector_bullish=sector_bullish)
             held_results.append(result)
             if result["signal"] == "SELL":
                 positions.remove_position(ticker)
         else:
-            result = evaluate_ticker(ticker, latest_row, held_position=None, min_score=min_score)
+            result = evaluate_ticker(ticker, latest_row, held_position=None, min_score=min_score,
+                                      sector_bullish=sector_bullish)
             if result["signal"] == "BUY":
                 buy_candidates.append(result)
 
     buy_candidates.sort(key=lambda x: x["score"], reverse=True)
-    top_buys = buy_candidates[:config.TOP_N_RESULTS]
+    check_pool = buy_candidates[:config.EARNINGS_CHECK_POOL]
+
+    print(f"Checking earnings dates for top {len(check_pool)} candidates...")
+    clear_of_earnings = filter_imminent_earnings(check_pool)
+    excluded_count = len(check_pool) - len(clear_of_earnings)
+    if excluded_count:
+        print(f"Excluded {excluded_count} candidate(s) with earnings coming up soon.")
+
+    top_buys = clear_of_earnings[:config.TOP_N_RESULTS]
 
     if config.AI_REASONING_ENABLED:
         print("Generating AI reasoning for top picks...")

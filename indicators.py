@@ -38,4 +38,7 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["vol_avg"] = df["volume"].rolling(config.RELVOL_PERIOD).mean()
     df["rel_vol"] = df["volume"] / df["vol_avg"]
 
+    # 52-week high, for the support/resistance check (Upgrade #3)
+    df["fifty_two_wk_high"] = df["close"].rolling(252, min_periods=200).max()
+
     return df

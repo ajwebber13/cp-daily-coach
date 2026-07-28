@@ -26,6 +26,13 @@ RELVOL_PERIOD = 20
 BUY_SCORE_MIN = 70               # confidence score needed to flag a BUY
 TOP_N_RESULTS = 15               # how many BUY candidates to show, ranked by score
 
+# --- Earnings avoidance (Upgrade #5) ---
+# Skip a BUY if earnings land within this many days — a surprise can gap
+# the stock past its stop-loss overnight. Only checked on candidates that
+# already passed every other filter (see earnings_check.py).
+EARNINGS_AVOID_DAYS = 7
+EARNINGS_CHECK_POOL = 30         # how many top-scoring candidates get checked before taking the final top 15
+
 # --- Market regime (Upgrade #1: don't fight the tape) ---
 MARKET_MIXED_PENALTY = 5         # added to BUY_SCORE_MIN when SPY/QQQ disagree
 MARKET_BEARISH_PENALTY = 10      # added to BUY_SCORE_MIN when both are trending down
@@ -42,10 +49,14 @@ ATR_TARGET_MULT = 3.0            # gives roughly 1.5:1 reward-to-risk (see score
 MIN_REWARD_RISK_RATIO = 1.5
 
 # --- Scoring weights (must sum to 100) ---
-WEIGHT_TREND = 40
-WEIGHT_VOLUME = 20
-WEIGHT_RSI = 20
-WEIGHT_VOLATILITY = 20
+# Rebalanced again for Upgrade #4 (sector strength) — took a bit from
+# trend/volume/RSI rather than disturbing support/resistance again.
+WEIGHT_TREND = 30
+WEIGHT_VOLUME = 12
+WEIGHT_RSI = 13
+WEIGHT_VOLATILITY = 15
+WEIGHT_SUPPORT_RESISTANCE = 20
+WEIGHT_SECTOR = 10
 
 # --- Position tracking ---
 POSITIONS_FILE = "positions.json"

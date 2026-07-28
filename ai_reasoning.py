@@ -50,8 +50,10 @@ def explain_signal(result: dict) -> str | None:
         breakdown = result.get("score_breakdown", {})
         user_prompt = (
             f"{ticker} triggered a BUY signal. Score breakdown out of 100: "
-            f"trend {breakdown.get('trend')}/40, volume {breakdown.get('volume')}/20, "
-            f"RSI {breakdown.get('rsi')}/20, volatility {breakdown.get('volatility')}/20 "
+            f"trend {breakdown.get('trend')}/30, volume {breakdown.get('volume')}/12, "
+            f"RSI {breakdown.get('rsi')}/13, volatility {breakdown.get('volatility')}/15, "
+            f"room before 52-week high {breakdown.get('support_resistance')}/20, "
+            f"sector strength {breakdown.get('sector')}/10 "
             f"(total {result.get('score')}). Entry ${result.get('entry')}, "
             f"stop ${result.get('stop')}, target ${result.get('target')}. "
             f"Explain why this setup scored well."
