@@ -29,6 +29,10 @@ jobs:
         run: |
           git config user.name "cp-daily-coach-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add positions.json
-          git diff --cached --quiet && echo "No position changes to commit" || git commit -m "Update positions.json [automated]"
-          git push
+          if [ -f positions.json ]; then
+            git add positions.json
+            git diff --cached --quiet && echo "No position changes to commit" || git commit -m "Update positions.json [automated]"
+            git push
+          else
+            echo "positions.json does not exist yet — nothing to commit."
+          fi
