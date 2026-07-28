@@ -11,12 +11,15 @@ Separate project from `cp-stock-signal-engine` (live ML system) and
 wasn't worth it yet). This is the coach — a decision-support tool, not a
 trading system.
 
-Two scans, two purposes:
-- **`scan.py`** (after close) — the main BUY/SELL/HOLD/DO NOTHING signals
-  with entry/stop/target and a confidence score.
-- **`premarket.py`** (before open) — awareness only, no scoring. Flags any
-  S&P 500 ticker moving 3%+ before the bell so you know what's in motion.
-  Not a buy/sell signal by itself — just tells you where the action is.
+Three checks, three purposes:
+- **`premarket.py`** (before open, ~7-8 AM ET) — awareness only, no scoring.
+  Flags any S&P 500 ticker moving 3%+ before the bell.
+- **`midday.py`** (midday, ~12 PM ET) — same lightweight movers check,
+  partway through the trading day.
+- **`scan.py`** (after close, ~4-5 PM ET) — the main event. Full
+  BUY/SELL/HOLD/DO NOTHING signals with entry/stop/target and a
+  confidence score, checked against market trend, reward:risk, resistance,
+  sector strength, and earnings timing.
 
 ## Setup
 
@@ -137,6 +140,7 @@ positions.py           - tracks what you're actually holding
 discord_alert.py        - formats and sends the daily message
 scan.py                  - main entry point, run this daily (after close)
 premarket.py              - pre-market movers scan, run before open
+midday.py                  - midday movers check-in
 test_synthetic.py         - sanity check with fake data, no network needed
 ```
 
