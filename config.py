@@ -34,6 +34,13 @@ MARKET_BEARISH_PENALTY = 10      # added to BUY_SCORE_MIN when both are trending
 ATR_STOP_MULT = 2.0
 ATR_TARGET_MULT = 3.0            # gives roughly 1.5:1 reward-to-risk (see scorer.py)
 
+# --- Risk/reward gate (Upgrade #2) ---
+# Even if a ticker scores well, skip it if the reward doesn't clearly
+# justify the risk. 3xATR target / 2xATR stop already gives ~1.5:1 by
+# construction, so this mostly catches edge cases where volatility
+# distorts that ratio.
+MIN_REWARD_RISK_RATIO = 1.5
+
 # --- Scoring weights (must sum to 100) ---
 WEIGHT_TREND = 40
 WEIGHT_VOLUME = 20

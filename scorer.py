@@ -128,10 +128,29 @@ def evaluate_ticker(ticker: str, row, held_position: dict = None, min_score: flo
 
     # Not held — evaluate as a potential new entry
     if trend_aligned(row) and score["total"] >= min_score:
+        # Compute the ratio from raw (unrounded) prices — rounding entry/
+        # stop/target to cents for display can push a mathematically exact
+        # ratio just under the threshold by a fraction of a cent.
+        raw_entry = row["close"]
+        raw_stop = raw_entry - config.ATR_STOP_MULT * row["atr"]
+        raw_target = raw_entry + config.ATR_TARGET_MULT * row["atr"]
+        raw_risk = raw_entry - raw_stop
+        raw_reward = raw_target - raw_entry
+        # Round before comparing — floating-point math can turn an exact
+        # 1.5 into 1.4999999999999973, which would wrongly fail a strict
+        # >= check against a threshold of 1.5.
+        reward_risk_ratio = round(raw_reward / raw_risk, 4) if raw_risk > 0 else 0
+
+        if reward_risk_ratio < config.MIN_REWARD_RISK_RATIO:
+            return {
+                "ticker": ticker, "signal": "DO NOTHING", "score": score["total"],
+                "skipped_reason": f"reward:risk only {reward_risk_ratio:.2f}:1 (need {config.MIN_REWARD_RISK_RATIO}:1)",
+            }
+
         levels = entry_stop_target(row)
         return {
             "ticker": ticker, "signal": "BUY", "score": score["total"],
-            "score_breakdown": score, **levels,
+            "score_breakdown": score, "reward_risk_ratio": round(reward_risk_ratio, 2), **levels,
         }
 
     return {"ticker": ticker, "signal": "DO NOTHING", "score": score["total"]}
