@@ -63,6 +63,28 @@ python positions.py remove NVDA
 python positions.py list
 ```
 
+## AI reasoning (optional)
+
+Adds a 2-3 sentence plain-language explanation under each BUY/HOLD/SELL
+pick, using Google Gemini's free tier. The rules still decide the signal —
+this only explains why, so you don't have to read the score breakdown
+yourself. Only called on the picks that already cleared the rules (top 15
+BUY + anything held), not the full 500-ticker universe, to stay
+comfortably inside the free tier's rate limits.
+
+1. Get a free key: [aistudio.google.com/apikey](https://aistudio.google.com/apikey) — no credit card needed.
+2. Set it locally:
+```powershell
+[System.Environment]::SetEnvironmentVariable('GEMINI_API_KEY', 'your_key_here', 'User')
+```
+
+For GitHub Actions, add `GEMINI_API_KEY` as a repo secret the same way you
+added `DISCORD_WEBHOOK_URL`, then it's already wired into both workflow
+files' `env:` blocks.
+
+If `GEMINI_API_KEY` isn't set, the coach runs exactly as before —
+rules-only, no reasoning line, no error.
+
 ## How the score works
 
 0-100, four rule-based components (see `scorer.py` for the exact math):

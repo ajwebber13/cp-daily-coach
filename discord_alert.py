@@ -9,32 +9,40 @@ import config
 
 
 def format_message(buy_signals: list, held_signals: list) -> str:
-    lines = ["**Daily Stock Coach**"]
+    lines = ["**📊 Daily Stock Coach**"]
 
     sells = [s for s in held_signals if s["signal"] == "SELL"]
     holds = [s for s in held_signals if s["signal"] == "HOLD"]
 
     if sells:
-        lines.append("\n**SELL**")
+        lines.append("\n**🔴 SELL — time to get out**")
         for s in sells:
-            lines.append(f"`{s['ticker']}` — {s['reason']} (${s['current_price']})")
+            lines.append(f"`{s['ticker']}` — {s['reason']}. Price now: ${s['current_price']}")
+            if s.get("reasoning"):
+                lines.append(f"  _{s['reasoning']}_")
 
     if holds:
-        lines.append("\n**HOLD**")
+        lines.append("\n**🟡 HOLD — keep what you have**")
         for s in holds:
             lines.append(
-                f"`{s['ticker']}` — {s['gain_pct']:+.1f}% | move stop to ${s['suggested_stop']}"
+                f"`{s['ticker']}` — up {s['gain_pct']:+.1f}% since you bought it. "
+                f"New safety stop: ${s['suggested_stop']}"
             )
+            if s.get("reasoning"):
+                lines.append(f"  _{s['reasoning']}_")
 
     if buy_signals:
-        lines.append(f"\n**BUY — Top {len(buy_signals)}**")
-        lines.append("`Ticker  Entry    Stop    Target   Score`")
+        lines.append(f"\n**🟢 BUY — top {len(buy_signals)} to consider**")
+        lines.append("_Buy at / Safety stop / Goal price / Score (higher = stronger)_")
         for s in buy_signals:
             lines.append(
-                f"`{s['ticker']:<7} ${s['entry']:<8} ${s['stop']:<7} ${s['target']:<8} {s['score']}`"
+                f"`{s['ticker']:<7} Buy ${s['entry']:<8} Stop ${s['stop']:<7} "
+                f"Goal ${s['target']:<8} Score {s['score']}`"
             )
+            if s.get("reasoning"):
+                lines.append(f"  _{s['reasoning']}_")
     else:
-        lines.append("\nNo BUY candidates cleared the threshold today.")
+        lines.append("\nNothing looked strong enough to buy today.")
 
     return "\n".join(lines)
 

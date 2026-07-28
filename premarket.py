@@ -85,24 +85,24 @@ def find_movers(tickers: list) -> pd.DataFrame:
 
 
 def format_premarket_message(movers: pd.DataFrame) -> str:
-    lines = ["**Pre-Market Movers**"]
+    lines = ["**🌅 Before the Market Opens**"]
 
     if movers.empty:
-        lines.append(f"\nNothing moved more than {config.PREMARKET_MOVE_THRESHOLD}% pre-market.")
+        lines.append(f"\nNothing is moving much yet — no stock changed more than {config.PREMARKET_MOVE_THRESHOLD}%.")
         return "\n".join(lines)
 
     gainers = movers[movers["pct_change"] > 0].sort_values("pct_change", ascending=False).head(config.PREMARKET_TOP_N)
     losers = movers[movers["pct_change"] < 0].sort_values("pct_change").head(config.PREMARKET_TOP_N)
 
     if not gainers.empty:
-        lines.append("\n**Trending Up**")
-        lines.append("`Ticker  Prev Close  Now      Change`")
+        lines.append("\n**⬆️ Going Up**")
+        lines.append("_Yesterday's price / Price now / Change_")
         for _, r in gainers.iterrows():
             lines.append(f"`{r['ticker']:<7} ${r['prev_close']:<10} ${r['premarket_price']:<8} +{r['pct_change']}%`")
 
     if not losers.empty:
-        lines.append("\n**Trending Down**")
-        lines.append("`Ticker  Prev Close  Now      Change`")
+        lines.append("\n**⬇️ Going Down**")
+        lines.append("_Yesterday's price / Price now / Change_")
         for _, r in losers.iterrows():
             lines.append(f"`{r['ticker']:<7} ${r['prev_close']:<10} ${r['premarket_price']:<8} {r['pct_change']}%`")
 

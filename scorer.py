@@ -107,12 +107,12 @@ def evaluate_ticker(ticker: str, row, held_position: dict = None) -> dict:
 
         if current_price <= trailing_stop:
             return {
-                "ticker": ticker, "signal": "SELL", "reason": "stop hit",
+                "ticker": ticker, "signal": "SELL", "reason": "price dropped to your stop-loss level",
                 "score": score["total"], "current_price": round(current_price, 2),
             }
         if trend_flipped(row):
             return {
-                "ticker": ticker, "signal": "SELL", "reason": "trend reversal (20 EMA crossed below 50 EMA)",
+                "ticker": ticker, "signal": "SELL", "reason": "the stock's short-term trend just turned down",
                 "score": score["total"], "current_price": round(current_price, 2),
             }
 

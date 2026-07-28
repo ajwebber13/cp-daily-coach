@@ -2,8 +2,10 @@ name: Daily Stock Coach
 
 on:
   schedule:
-    - cron: '0 21 * * 1-5'
-  workflow_dispatch: {}
+    # 21:00 UTC = 4:00 PM ET (5:00 PM during daylight saving).
+    # Runs after the market closes; adjust if you want it earlier/later.
+    - cron: '0 21 * * 1-5'   # weekdays only
+  workflow_dispatch: {}       # lets you trigger it manually from the Actions tab
 
 jobs:
   scan:
@@ -23,8 +25,13 @@ jobs:
       - name: Run daily scan
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python scan.py
 
+      # positions.json changes (HOLD gains, SELL removals) need to be saved
+      # back to the repo, or every run starts fresh with no memory of what
+      # you're holding. Skips cleanly if the file doesn't exist yet (no
+      # trades tracked so far) instead of failing the workflow.
       - name: Commit updated positions.json
         run: |
           git config user.name "cp-daily-coach-bot"

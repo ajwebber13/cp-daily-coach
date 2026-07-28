@@ -45,3 +45,12 @@ PREMARKET_TOP_N = 15              # gainers and losers shown, each
 
 # --- Discord ---
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
+
+# --- AI reasoning (optional) ---
+# Adds a plain-language explanation to each BUY/HOLD/SELL pick. Only called
+# on tickers that already cleared the rule-based signal — not the full
+# universe — to keep this comfortably inside Gemini's free tier. If
+# GEMINI_API_KEY isn't set, the coach just skips this and runs rules-only.
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")  # free-tier model
+AI_REASONING_ENABLED = bool(GEMINI_API_KEY)
