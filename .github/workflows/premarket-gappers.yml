@@ -1,0 +1,67 @@
+name: Premarket Gappers Scanner
+
+on:
+  schedule:
+    # 12:30 UTC = 8:30 AM EDT (spring/summer)
+    # 13:30 UTC = 8:30 AM EST (fall/winter)
+    # Both fire every weekday since GitHub cron doesn't shift with DST — the
+    # "Determine whether to run" step below checks the real America/New_York
+    # clock and skips whichever one lands off-target, so only one actually runs.
+    - cron: "30 12 * * 1-5"
+    - cron: "30 13 * * 1-5"
+  workflow_dispatch: {}   # manual trigger always runs, bypassing the time gate below
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Determine whether to run
+        id: gate
+        run: |
+          NY_DATE=$(TZ="America/New_York" date +%F)
+          NY_TIME=$(TZ="America/New_York" date +%H:%M)
+          OUT_FILE="premarket_gappers_${NY_DATE}.json"
+
+          if [ -f "$OUT_FILE" ]; then
+            echo "Already ran today ($OUT_FILE exists) - skipping."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            if [[ "$NY_TIME" < "08:25" || "$NY_TIME" > "08:59" ]]; then
+              echo "Current NY time ($NY_TIME) is outside the 8:30 AM window - this is the off-season DST cron, skipping."
+              echo "should_run=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
+
+      - name: Run premarket gappers scan
+        if: steps.gate.outputs.should_run == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: ./premarket_gappers.sh
+
+      - name: Commit scan result
+        if: steps.gate.outputs.should_run == 'true'
+        run: |
+          git config user.name "cp-daily-coach-bot"
+          git config user.email "actions@users.noreply.github.com"
+
+          NY_DATE=$(TZ="America/New_York" date +%F)
+          OUT_FILE="premarket_gappers_${NY_DATE}.json"
+
+          if [ -f "$OUT_FILE" ]; then
+            git add "$OUT_FILE"
+            git diff --cached --quiet && echo "No changes to commit" || git commit -m "Add premarket gappers scan for ${NY_DATE} [automated]"
+            git push
+          else
+            echo "$OUT_FILE not found - scan may have failed, nothing to commit."
+          fi

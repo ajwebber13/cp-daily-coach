@@ -125,7 +125,21 @@ jq -n --arg ts "$TIMESTAMP" --argjson gappers "$GAPPERS_WITH_CATALYSTS" '{scanne
 echo "Saved to $OUT_FILE" >&2
 
 # --- Step 5: one-line summary ---
-jq -r '
+SUMMARY_LINE=$(jq -r '
   "Premarket Gappers: \(.gappers | length) names. Top: " +
   ( [.gappers[0:3][] | "\(.symbol) (\(.gap_pct)%) - \(.catalyst // "no catalyst found")"] | join(", ") )
-' "$OUT_FILE"
+' "$OUT_FILE")
+
+echo "$SUMMARY_LINE"
+
+# --- Step 6: optional Discord post (same DISCORD_WEBHOOK_URL as the rest of the coach) ---
+if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
+  DISCORD_BODY=$(jq -r '
+    "**Premarket Gappers**\n" +
+    ( [.gappers[] | "`\(.symbol)` +\(.gap_pct)% @ $\(.price) - \(.catalyst // "no catalyst found")"] | join("\n") )
+  ' "$OUT_FILE")
+  curl -sS --max-time 30 -X POST "$DISCORD_WEBHOOK_URL" \
+    -H "Content-Type: application/json" \
+    -d "$(jq -n --arg content "$DISCORD_BODY" '{content: $content}')" \
+    > /dev/null || echo "Discord post failed (non-fatal)" >&2
+fi

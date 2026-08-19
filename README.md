@@ -88,6 +88,31 @@ files' `env:` blocks.
 If `GEMINI_API_KEY` isn't set, the coach runs exactly as before —
 rules-only, no reasoning line, no error.
 
+## Premarket gappers scanner
+
+`premarket_gappers.sh` is a separate, standalone check from the three above —
+scans Yahoo Finance's premarket gainers list for names up 5%+ on 50k+ volume
+above $3, ranks the top 10, and looks up a one-line news catalyst for each
+from Benzinga. Writes `premarket_gappers_YYYY-MM-DD.json` and (if
+`DISCORD_WEBHOOK_URL` is set) posts the list to Discord.
+
+Needs `ANTHROPIC_API_KEY` (from [console.anthropic.com](https://console.anthropic.com/settings/keys) —
+a separate, pay-as-you-go product from your claude.ai subscription) since it
+uses the Claude API to fetch and parse both sites:
+
+```bash
+ANTHROPIC_API_KEY=sk-ant-... ./premarket_gappers.sh
+```
+
+Automated the same way as the other checks — see
+`.github/workflows/premarket-gappers.yml`. Fires weekdays at 8:30 AM ET;
+add `ANTHROPIC_API_KEY` as a repo secret (same place as
+`DISCORD_WEBHOOK_URL`) for the scheduled run to work. It won't run twice in
+one day (skips if today's JSON file already exists) and the scheduled
+trigger only fires within a few minutes of 8:30 AM ET even though the cron
+itself is duplicated for DST — manual runs from the Actions tab bypass that
+time check.
+
 ## How the score works
 
 0-100, four rule-based components (see `scorer.py` for the exact math):
@@ -141,6 +166,7 @@ discord_alert.py        - formats and sends the daily message
 scan.py                  - main entry point, run this daily (after close)
 premarket.py              - pre-market movers scan, run before open
 midday.py                  - midday movers check-in
+premarket_gappers.sh        - standalone premarket gap scanner + news catalysts (needs ANTHROPIC_API_KEY)
 test_synthetic.py         - sanity check with fake data, no network needed
 ```
 
