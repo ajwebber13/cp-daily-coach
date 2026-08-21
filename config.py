@@ -16,7 +16,7 @@ BATCH_SIZE = 100                 # tickers per yfinance batch download
 
 # --- Indicators ---
 EMA_FAST = 20
-EMA_SLOW = 50
+EMA_SLOW = 9
 SMA_TREND = 200
 ATR_PERIOD = 14
 RSI_PERIOD = 14
