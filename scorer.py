@@ -4,9 +4,10 @@ Turns the latest indicator values into:
   - a 0-100 confidence score (fully rule-based, no black box)
   - a signal: BUY / SELL / HOLD / PUT WATCH / DO NOTHING
   - entry, stop, and target prices when relevant
+  - caution flags for any check that only marginally passed
 
 This is Drew's TradingView 6-check swing system, automated. Score
-breakdown (20 pts each, must sum to 100 — see config.py to change):
+breakdown (20 pts max each, must sum to 100 — see config.py to change):
   Check 1 - Trend        - price above EMA 200?
   Check 2 - Crossover     - EMA 9 above EMA 20?
   Check 3 - MACD          - MACD line above its signal line?
@@ -14,10 +15,18 @@ breakdown (20 pts each, must sum to 100 — see config.py to change):
   Check 5 - Volume          - today's volume above the 30-day average?
   Check 6 - ATR (not scored) - informational only, used to size the stop/target.
 
-Every check is pass/fail, same as reading the chart by hand — no partial
-credit for "almost." A 100 means all 5 scored checks passed. This is a
-heuristic, not a probability: a 100 doesn't mean "100% chance of being
-right," it means every condition in the checklist is currently true.
+Each check grades on THREE tiers, not just pass/fail — same distinction
+Drew makes reading the chart by hand ("RSI near ceiling", "crossover too
+tight", "volume looks like a spike"):
+  - FULL  (20 pts) - clean pass, comfortably inside the healthy range
+  - HALF  (10 pts) - marginal pass - technically clears the bar, but
+                       thin/edge-case - a caution flag is attached
+  - FAIL  (0 pts)  - doesn't clear the bar at all
+
+A 100 means every check passed clean, no cautions. A ticker can pass all
+5 checks and still fall short of 100 if any of them were marginal. This
+is a heuristic, not a probability — a 100 doesn't mean "100% chance of
+being right," it means every condition is currently true and clean.
 
 PUT WATCH mirrors every check: trend below EMA 200 instead of above,
 EMA 9 below EMA 20, MACD below signal, same RSI zone, volume still above
@@ -28,65 +37,101 @@ import numpy as np
 import config
 
 
-# --- Bullish (BUY) checks ---
+FULL, HALF, FAIL = 20, 10, 0
+
+
+# --- Bullish (BUY) checks — each returns (points, flag_text_or_None) ---
+
+def grade_trend(row) -> tuple:
+    if np.isnan(row["ema200"]) or row["close"] <= row["ema200"]:
+        return FAIL, None
+    margin = (row["close"] / row["ema200"]) - 1
+    if margin >= config.TREND_MARGIN_PCT:
+        return FULL, None
+    return HALF, f"just reclaimed EMA 200 ({margin*100:.2f}% above) — thin margin"
+
+
+def grade_crossover(row) -> tuple:
+    if row["ema9"] <= row["ema20"]:
+        return FAIL, None
+    margin = (row["ema9"] / row["ema20"]) - 1
+    if margin >= config.CROSSOVER_MARGIN_PCT:
+        return FULL, None
+    gap = row["ema9"] - row["ema20"]
+    return HALF, f"EMA 9/20 crossover is tight (${gap:.2f} apart) — weak separation"
+
+
+def grade_macd(row) -> tuple:
+    if np.isnan(row["macd"]) or np.isnan(row["macd_signal"]) or row["macd"] <= row["macd_signal"]:
+        return FAIL, None
+    gap_pct = (row["macd"] - row["macd_signal"]) / row["close"]
+    if gap_pct >= config.MACD_MARGIN_PCT:
+        return FULL, None
+    return HALF, "MACD just barely above signal — momentum hasn't confirmed strongly yet"
+
+
+def grade_rsi(row) -> tuple:
+    rsi = row["rsi"]
+    if rsi < config.RSI_ZONE_MIN or rsi > config.RSI_ZONE_MAX:
+        return FAIL, None
+    if config.RSI_SWEET_MIN <= rsi <= config.RSI_SWEET_MAX:
+        return FULL, None
+    if rsi > config.RSI_SWEET_MAX:
+        return HALF, f"RSI {rsi:.1f} — near ceiling, approaching overbought"
+    return HALF, f"RSI {rsi:.1f} — near floor"
+
+
+def grade_volume(row) -> tuple:
+    rel_vol = row["rel_vol"]
+    if np.isnan(rel_vol) or rel_vol < 1.0:
+        return FAIL, None
+    if rel_vol <= config.VOLUME_IDEAL_MAX:
+        return FULL, None
+    return HALF, f"volume {rel_vol:.1f}x average — unusually high, could be a news-driven spike"
+
 
 def check_trend(row) -> bool:
-    if np.isnan(row["ema200"]):
-        return False
-    return row["close"] > row["ema200"]
+    return grade_trend(row)[0] > FAIL
 
 
 def check_crossover(row) -> bool:
-    return row["ema9"] > row["ema20"]
+    return grade_crossover(row)[0] > FAIL
 
 
 def check_macd(row) -> bool:
-    if np.isnan(row["macd"]) or np.isnan(row["macd_signal"]):
-        return False
-    return row["macd"] > row["macd_signal"]
+    return grade_macd(row)[0] > FAIL
 
 
 def check_rsi(row) -> bool:
-    return config.RSI_ZONE_MIN <= row["rsi"] <= config.RSI_ZONE_MAX
+    return grade_rsi(row)[0] > FAIL
 
 
 def check_volume(row) -> bool:
-    if np.isnan(row["rel_vol"]):
-        return False
-    return row["rel_vol"] > 1.0
+    return grade_volume(row)[0] > FAIL
 
 
 def compute_score(row) -> dict:
-    c1 = check_trend(row)
-    c2 = check_crossover(row)
-    c3 = check_macd(row)
-    c4 = check_rsi(row)
-    c5 = check_volume(row)
+    pts_trend, flag_trend = grade_trend(row)
+    pts_crossover, flag_crossover = grade_crossover(row)
+    pts_macd, flag_macd = grade_macd(row)
+    pts_rsi, flag_rsi = grade_rsi(row)
+    pts_volume, flag_volume = grade_volume(row)
 
-    total = (
-        (config.WEIGHT_TREND if c1 else 0)
-        + (config.WEIGHT_CROSSOVER if c2 else 0)
-        + (config.WEIGHT_MACD if c3 else 0)
-        + (config.WEIGHT_RSI if c4 else 0)
-        + (config.WEIGHT_VOLUME if c5 else 0)
-    )
-
-    rsi_flag = ""
-    if row["rsi"] >= config.RSI_ZONE_MAX - 2:
-        rsi_flag = "near ceiling — approaching overbought"
-    elif row["rsi"] <= config.RSI_ZONE_MIN + 5:
-        rsi_flag = "near floor"
+    total = pts_trend + pts_crossover + pts_macd + pts_rsi + pts_volume
+    passed = sum([pts_trend > FAIL, pts_crossover > FAIL, pts_macd > FAIL,
+                  pts_rsi > FAIL, pts_volume > FAIL])
+    flags = [f for f in [flag_trend, flag_crossover, flag_macd, flag_rsi, flag_volume] if f]
 
     return {
-        "total": round(total, 1),
-        "checks_passed": f"{sum([c1, c2, c3, c4, c5])}/5",
-        "trend": c1,
-        "crossover": c2,
-        "macd": c3,
-        "rsi": c4,
-        "volume": c5,
+        "total": total,
+        "checks_passed": f"{passed}/5",
+        "trend": pts_trend > FAIL,
+        "crossover": pts_crossover > FAIL,
+        "macd": pts_macd > FAIL,
+        "rsi": pts_rsi > FAIL,
+        "volume": pts_volume > FAIL,
         "rsi_value": round(row["rsi"], 2),
-        "rsi_flag": rsi_flag,
+        "flags": flags,
     }
 
 
@@ -107,46 +152,68 @@ def entry_stop_target(row) -> dict:
 
 # --- Bearish (PUT WATCH) checks — mirror of the above ---
 
+def grade_trend_bearish(row) -> tuple:
+    if np.isnan(row["ema200"]) or row["close"] >= row["ema200"]:
+        return FAIL, None
+    margin = 1 - (row["close"] / row["ema200"])
+    if margin >= config.TREND_MARGIN_PCT:
+        return FULL, None
+    return HALF, f"just broke below EMA 200 ({margin*100:.2f}% under) — thin margin"
+
+
+def grade_crossover_bearish(row) -> tuple:
+    if row["ema9"] >= row["ema20"]:
+        return FAIL, None
+    margin = 1 - (row["ema9"] / row["ema20"])
+    if margin >= config.CROSSOVER_MARGIN_PCT:
+        return FULL, None
+    gap = row["ema20"] - row["ema9"]
+    return HALF, f"EMA 9/20 crossover is tight (${gap:.2f} apart) — weak separation"
+
+
+def grade_macd_bearish(row) -> tuple:
+    if np.isnan(row["macd"]) or np.isnan(row["macd_signal"]) or row["macd"] >= row["macd_signal"]:
+        return FAIL, None
+    gap_pct = (row["macd_signal"] - row["macd"]) / row["close"]
+    if gap_pct >= config.MACD_MARGIN_PCT:
+        return FULL, None
+    return HALF, "MACD just barely below signal — momentum hasn't confirmed strongly yet"
+
+
 def check_trend_bearish(row) -> bool:
-    if np.isnan(row["ema200"]):
-        return False
-    return row["close"] < row["ema200"]
+    return grade_trend_bearish(row)[0] > FAIL
 
 
 def check_crossover_bearish(row) -> bool:
-    return row["ema9"] < row["ema20"]
+    return grade_crossover_bearish(row)[0] > FAIL
 
 
 def check_macd_bearish(row) -> bool:
-    if np.isnan(row["macd"]) or np.isnan(row["macd_signal"]):
-        return False
-    return row["macd"] < row["macd_signal"]
+    return grade_macd_bearish(row)[0] > FAIL
 
 
 def compute_score_bearish(row) -> dict:
-    c1 = check_trend_bearish(row)
-    c2 = check_crossover_bearish(row)
-    c3 = check_macd_bearish(row)
-    c4 = check_rsi(row)          # same zone — direction-agnostic
-    c5 = check_volume(row)       # same — direction-agnostic
+    pts_trend, flag_trend = grade_trend_bearish(row)
+    pts_crossover, flag_crossover = grade_crossover_bearish(row)
+    pts_macd, flag_macd = grade_macd_bearish(row)
+    pts_rsi, flag_rsi = grade_rsi(row)      # same zone — direction-agnostic
+    pts_volume, flag_volume = grade_volume(row)  # same — direction-agnostic
 
-    total = (
-        (config.WEIGHT_TREND if c1 else 0)
-        + (config.WEIGHT_CROSSOVER if c2 else 0)
-        + (config.WEIGHT_MACD if c3 else 0)
-        + (config.WEIGHT_RSI if c4 else 0)
-        + (config.WEIGHT_VOLUME if c5 else 0)
-    )
+    total = pts_trend + pts_crossover + pts_macd + pts_rsi + pts_volume
+    passed = sum([pts_trend > FAIL, pts_crossover > FAIL, pts_macd > FAIL,
+                  pts_rsi > FAIL, pts_volume > FAIL])
+    flags = [f for f in [flag_trend, flag_crossover, flag_macd, flag_rsi, flag_volume] if f]
 
     return {
-        "total": round(total, 1),
-        "checks_passed": f"{sum([c1, c2, c3, c4, c5])}/5",
-        "trend": c1,
-        "crossover": c2,
-        "macd": c3,
-        "rsi": c4,
-        "volume": c5,
+        "total": total,
+        "checks_passed": f"{passed}/5",
+        "trend": pts_trend > FAIL,
+        "crossover": pts_crossover > FAIL,
+        "macd": pts_macd > FAIL,
+        "rsi": pts_rsi > FAIL,
+        "volume": pts_volume > FAIL,
         "rsi_value": round(row["rsi"], 2),
+        "flags": flags,
     }
 
 
@@ -161,8 +228,6 @@ def trend_flipped_bearish(row) -> bool:
 
 
 def entry_stop_target_bearish(row) -> dict:
-    # Mirror of entry_stop_target: stop sits ABOVE entry (price rising
-    # against a put), target sits BELOW entry (price falling in your favor).
     entry = row["close"]
     stop = entry + config.ATR_STOP_MULT * row["atr"]
     target = entry - config.ATR_TARGET_MULT * row["atr"]
@@ -183,7 +248,6 @@ def evaluate_ticker(ticker: str, row, held_position: dict = None, min_score: flo
     score = compute_score(row)
 
     if held_position:
-        # Already in this trade — check for an exit trigger
         current_price = row["close"]
         trailing_stop = max(
             held_position.get("stop", 0),
@@ -208,19 +272,12 @@ def evaluate_ticker(ticker: str, row, held_position: dict = None, min_score: flo
             "gain_pct": round(gain_pct, 1), "suggested_stop": round(trailing_stop, 2),
         }
 
-    # Not held — evaluate as a potential new entry
     if trend_aligned(row) and score["total"] >= min_score:
-        # Compute the ratio from raw (unrounded) prices — rounding entry/
-        # stop/target to cents for display can push a mathematically exact
-        # ratio just under the threshold by a fraction of a cent.
         raw_entry = row["close"]
         raw_stop = raw_entry - config.ATR_STOP_MULT * row["atr"]
         raw_target = raw_entry + config.ATR_TARGET_MULT * row["atr"]
         raw_risk = raw_entry - raw_stop
         raw_reward = raw_target - raw_entry
-        # Round before comparing — floating-point math can turn an exact
-        # 1.5 into 1.4999999999999973, which would wrongly fail a strict
-        # >= check against a threshold of 1.5.
         reward_risk_ratio = round(raw_reward / raw_risk, 4) if raw_risk > 0 else 0
 
         if reward_risk_ratio < config.MIN_REWARD_RISK_RATIO:
@@ -232,10 +289,10 @@ def evaluate_ticker(ticker: str, row, held_position: dict = None, min_score: flo
         levels = entry_stop_target(row)
         return {
             "ticker": ticker, "signal": "BUY", "score": score["total"],
-            "score_breakdown": score, "reward_risk_ratio": round(reward_risk_ratio, 2), **levels,
+            "score_breakdown": score, "flags": score["flags"],
+            "reward_risk_ratio": round(reward_risk_ratio, 2), **levels,
         }
 
-    # BUY didn't clear — check the mirrored bearish setup before giving up
     if trend_aligned_bearish(row):
         score_bearish = compute_score_bearish(row)
         if score_bearish["total"] >= min_put_score:
@@ -250,7 +307,7 @@ def evaluate_ticker(ticker: str, row, held_position: dict = None, min_score: flo
                 levels = entry_stop_target_bearish(row)
                 return {
                     "ticker": ticker, "signal": "PUT WATCH", "score": score_bearish["total"],
-                    "score_breakdown": score_bearish,
+                    "score_breakdown": score_bearish, "flags": score_bearish["flags"],
                     "reward_risk_ratio": round(reward_risk_ratio, 2), **levels,
                 }
 

@@ -41,6 +41,8 @@ def format_message(buy_signals: list, put_signals: list, held_signals: list, mar
                 f"`{s['ticker']:<7} Buy ${s['entry']:<8} Stop ${s['stop']:<7} "
                 f"Goal ${s['target']:<8} Score {s['score']}`"
             )
+            for flag in s.get("flags", []):
+                lines.append(f"  ⚠️ {flag}")
             opt = s.get("options")
             if opt:
                 vol = opt["volatility"]
@@ -62,6 +64,8 @@ def format_message(buy_signals: list, put_signals: list, held_signals: list, mar
                 f"`{s['ticker']:<7} Entry ${s['entry']:<8} Stop ${s['stop']:<7} "
                 f"Goal ${s['target']:<8} Score {s['score']}`"
             )
+            for flag in s.get("flags", []):
+                lines.append(f"  ⚠️ {flag}")
             opt = s.get("options")
             if opt:
                 vol = opt["volatility"]

@@ -59,14 +59,26 @@ MIN_REWARD_RISK_RATIO = 1.5
 
 # --- Scoring weights (must sum to 100) ---
 # Replaced with Drew's TradingView 6-check swing system (2026-08-20).
-# 5 scored checks, 20pts each. ATR is the 6th check but is informational
-# only (used for stop/target sizing below, not for the score itself) —
-# same as how Drew reads it on the chart.
+# 5 scored checks, 20pts max each. ATR is the 6th check but is
+# informational only (used for stop/target sizing below, not for the
+# score itself) — same as how Drew reads it on the chart.
 WEIGHT_TREND = 20        # Check 1: price above EMA 200
 WEIGHT_CROSSOVER = 20    # Check 2: EMA 9 above EMA 20
 WEIGHT_MACD = 20         # Check 3: MACD line above signal line
 WEIGHT_RSI = 20          # Check 4: RSI in the 40-65 zone
 WEIGHT_VOLUME = 20       # Check 5: today's volume above 30-day average
+
+# --- Marginal-pass grading (2026-08-20) ---
+# A check that barely passes isn't as strong as one that passes clean —
+# same distinction Drew makes reading the chart by hand ("RSI near
+# ceiling", "crossover too tight"). Each check below can score full
+# marks, half marks (marginal, flagged), or zero (failed).
+TREND_MARGIN_PCT = 0.01          # need price > 1% above EMA200 for full marks
+CROSSOVER_MARGIN_PCT = 0.005     # need EMA9 > 0.5% above EMA20 for full marks
+MACD_MARGIN_PCT = 0.0005         # need MACD-signal gap > 0.05% of price for full marks
+RSI_SWEET_MIN = 45               # full marks inside 45-60, half marks 40-45 / 60-65
+RSI_SWEET_MAX = 60
+VOLUME_IDEAL_MAX = 3.0           # full marks 1.0-3.0x, half marks above 3.0x (spike, flagged)
 
 # --- Position tracking ---
 POSITIONS_FILE = "positions.json"
@@ -94,5 +106,5 @@ DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 # universe — to keep this comfortably inside Gemini's free tier. If
 # GEMINI_API_KEY isn't set, the coach just skips this and runs rules-only.
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")  # free-tier model
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")  # free-tier model
 AI_REASONING_ENABLED = bool(GEMINI_API_KEY)
