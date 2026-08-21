@@ -18,8 +18,8 @@ Three checks, three purposes:
   partway through the trading day.
 - **`scan.py`** (after close, ~4-5 PM ET) — the main event. Full
   BUY/SELL/HOLD/DO NOTHING signals with entry/stop/target and a
-  confidence score, checked against market trend, reward:risk, resistance,
-  sector strength, and earnings timing.
+  confidence score, checked against market trend, reward:risk, and
+  earnings timing.
 
 ## Setup
 
@@ -90,19 +90,32 @@ rules-only, no reasoning line, no error.
 
 ## How the score works
 
-0-100, four rule-based components (see `scorer.py` for the exact math):
+This is Drew's TradingView 6-check swing system, automated — same rules,
+same math, so a ticker's score here should match what you'd get checking
+the chart by hand. 0-100, five pass/fail checks worth 20 points each (see
+`scorer.py` for the exact math):
 
-| Component | Points | What it checks |
+| Check | Points | What it checks |
 |---|---|---|
-| Trend | 40 | Price above 200 SMA, 20 EMA above 50 EMA |
-| Volume | 20 | Today's volume vs. 20-day average |
-| RSI | 20 | Momentum in a healthy zone (peaks at RSI 55) |
-| Volatility | 20 | ATR relative to price — calmer stocks score higher |
+| Trend | 20 | Price above EMA 200? |
+| Crossover | 20 | EMA 9 above EMA 20? |
+| MACD | 20 | MACD line above its signal line? |
+| RSI | 20 | RSI inside the 40-65 zone? |
+| Volume | 20 | Today's volume above the 30-day average? |
 
-A BUY signal requires trend alignment **and** a score of 70+
-(`config.py` → `BUY_SCORE_MIN`). This is a ranking heuristic, not a
-probability — a 92 means 92% of the defined conditions are met, not a 92%
-chance of being right.
+A 6th check — **ATR** — is informational only, not scored. It's used to
+size the stop (`entry - 2x ATR`) and target (`entry + 3x ATR`), same as
+you do reading it off the chart.
+
+A BUY signal requires trend alignment (checks 1 and 2 both true) **and**
+a score of 70+ (`config.py` → `BUY_SCORE_MIN`, so at least 4 of 5 checks
+passing). Every check is pass/fail — no partial credit for "almost." A
+100 means all 5 scored checks are true right now, not a 100% chance of
+being right.
+
+**Not automated by this script:** support/resistance levels and
+candlestick patterns (BE, SS, MS, ES) — those still need your eyes on
+the chart.
 
 ## Automating the daily run (GitHub Actions — recommended)
 

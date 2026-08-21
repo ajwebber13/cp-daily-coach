@@ -8,7 +8,7 @@ import requests
 import config
 
 
-def format_message(buy_signals: list, held_signals: list, market_label: str = None) -> str:
+def format_message(buy_signals: list, put_signals: list, held_signals: list, market_label: str = None) -> str:
     lines = ["**📊 Daily Stock Coach**"]
     if market_label:
         lines.append(market_label)
@@ -41,10 +41,37 @@ def format_message(buy_signals: list, held_signals: list, market_label: str = No
                 f"`{s['ticker']:<7} Buy ${s['entry']:<8} Stop ${s['stop']:<7} "
                 f"Goal ${s['target']:<8} Score {s['score']}`"
             )
+            opt = s.get("options")
+            if opt:
+                vol = opt["volatility"]
+                vol_note = f", vol {vol['read']}" if vol.get("available") else ""
+                lines.append(
+                    f"  🟢 CALL {s['ticker']} ${opt['strike']} exp {opt['expiry']} "
+                    f"— ${opt['bid']}/${opt['ask']}, OI {opt['open_interest']}{vol_note}"
+                )
             if s.get("reasoning"):
                 lines.append(f"  _{s['reasoning']}_")
     else:
         lines.append("\nNothing looked strong enough to buy today.")
+
+    if put_signals:
+        lines.append(f"\n**🔴 PUT WATCH — top {len(put_signals)} to consider**")
+        lines.append("_Entry / Safety stop / Goal price / Score (higher = stronger)_")
+        for s in put_signals:
+            lines.append(
+                f"`{s['ticker']:<7} Entry ${s['entry']:<8} Stop ${s['stop']:<7} "
+                f"Goal ${s['target']:<8} Score {s['score']}`"
+            )
+            opt = s.get("options")
+            if opt:
+                vol = opt["volatility"]
+                vol_note = f", vol {vol['read']}" if vol.get("available") else ""
+                lines.append(
+                    f"  🔴 PUT {s['ticker']} ${opt['strike']} exp {opt['expiry']} "
+                    f"— ${opt['bid']}/${opt['ask']}, OI {opt['open_interest']}{vol_note}"
+                )
+            if s.get("reasoning"):
+                lines.append(f"  _{s['reasoning']}_")
 
     return "\n".join(lines)
 

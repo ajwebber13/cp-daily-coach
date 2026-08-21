@@ -26,6 +26,9 @@ RELVOL_PERIOD = 20
 BUY_SCORE_MIN = 70               # confidence score needed to flag a BUY
 TOP_N_RESULTS = 15               # how many BUY candidates to show, ranked by score
 
+PUT_SCORE_MIN = 70               # confidence score needed to flag a PUT WATCH
+TOP_N_PUT_RESULTS = 15           # how many PUT WATCH candidates to show, ranked by score
+
 # --- Earnings avoidance (Upgrade #5) ---
 # Skip a BUY if earnings land within this many days — a surprise can gap
 # the stock past its stop-loss overnight. Only checked on candidates that
@@ -64,6 +67,16 @@ POSITIONS_FILE = "positions.json"
 # --- Pre-market movers ---
 PREMARKET_MOVE_THRESHOLD = 3.0    # minimum % move (up or down) to flag a ticker
 PREMARKET_TOP_N = 15              # gainers and losers shown, each
+
+# --- Options overlay ---
+OPTIONS_OVERLAY_ENABLED = True
+OPTIONS_MIN_OPEN_INTEREST = 500
+OPTIONS_MAX_SPREAD_PCT = 0.10
+OPTIONS_TARGET_DTE_MIN = 30
+OPTIONS_TARGET_DTE_MAX = 45
+OPTIONS_TARGET_MONEYNESS = 0.05
+OPTIONS_MAX_STRIKE_DRIFT_PCT = 0.05   # reject if closest liquid strike is >5% of target away
+OPTIONS_VOL_LOOKBACK_DAYS = 30
 
 # --- Discord ---
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")

@@ -2,129 +2,100 @@
 scorer.py
 Turns the latest indicator values into:
   - a 0-100 confidence score (fully rule-based, no black box)
-  - a signal: BUY / SELL / HOLD / DO NOTHING
+  - a signal: BUY / SELL / HOLD / PUT WATCH / DO NOTHING
   - entry, stop, and target prices when relevant
 
-Score breakdown (must sum to 100 — see config.py to change weights):
-  Trend alignment      (35 pts) - is price in a confirmed uptrend?
-  Volume               (15 pts) - is today's move backed by real volume?
-  RSI positioning       (15 pts) - is momentum healthy, not overbought/oversold?
-  Volatility            (15 pts) - is the stock calm enough for a clean stop/target?
-  Support/Resistance   (20 pts) - is there room to run before the 52-week high?
+This is Drew's TradingView 6-check swing system, automated. Score
+breakdown (20 pts each, must sum to 100 — see config.py to change):
+  Check 1 - Trend        - price above EMA 200?
+  Check 2 - Crossover     - EMA 9 above EMA 20?
+  Check 3 - MACD          - MACD line above its signal line?
+  Check 4 - RSI            - RSI inside the 40-65 zone?
+  Check 5 - Volume          - today's volume above the 30-day average?
+  Check 6 - ATR (not scored) - informational only, used to size the stop/target.
 
-This is a heuristic, not a probability. A 92 doesn't mean "92% chance of
-being right" — it means 92% of the defined conditions for a clean, healthy
-trend-following entry are currently true. Treat it as a ranking signal
-between tickers, not a statement of certainty.
+Every check is pass/fail, same as reading the chart by hand — no partial
+credit for "almost." A 100 means all 5 scored checks passed. This is a
+heuristic, not a probability: a 100 doesn't mean "100% chance of being
+right," it means every condition in the checklist is currently true.
+
+PUT WATCH mirrors every check: trend below EMA 200 instead of above,
+EMA 9 below EMA 20, MACD below signal, same RSI zone, volume still above
+average (direction-agnostic).
 """
 import numpy as np
-import pandas as pd
 
 import config
 
 
-def score_trend(row) -> float:
-    if row["sma_trend"] is None or np.isnan(row["sma_trend"]):
-        return 0.0
-    points = 0.0
-    if row["close"] > row["sma_trend"]:
-        points += config.WEIGHT_TREND / 2
-    if row["ema_fast"] > row["ema_slow"]:
-        points += config.WEIGHT_TREND / 2
-    return points
+# --- Bullish (BUY) checks ---
+
+def check_trend(row) -> bool:
+    if np.isnan(row["ema200"]):
+        return False
+    return row["close"] > row["ema200"]
 
 
-def score_volume(row) -> float:
+def check_crossover(row) -> bool:
+    return row["ema9"] > row["ema20"]
+
+
+def check_macd(row) -> bool:
+    if np.isnan(row["macd"]) or np.isnan(row["macd_signal"]):
+        return False
+    return row["macd"] > row["macd_signal"]
+
+
+def check_rsi(row) -> bool:
+    return config.RSI_ZONE_MIN <= row["rsi"] <= config.RSI_ZONE_MAX
+
+
+def check_volume(row) -> bool:
     if np.isnan(row["rel_vol"]):
-        return 0.0
-    # Full points at 2x average volume or higher, scaled linearly below that
-    ratio = min(row["rel_vol"] / 2.0, 1.0)
-    return max(ratio, 0.0) * config.WEIGHT_VOLUME
+        return False
+    return row["rel_vol"] > 1.0
 
 
-def score_rsi(row) -> float:
-    # Triangular score peaking at RSI 55, zero at RSI <=30 or >=80
-    rsi = row["rsi"]
-    distance = abs(rsi - 55)
-    scaled = max(0.0, 1 - distance / 25)
-    return scaled * config.WEIGHT_RSI
+def compute_score(row) -> dict:
+    c1 = check_trend(row)
+    c2 = check_crossover(row)
+    c3 = check_macd(row)
+    c4 = check_rsi(row)
+    c5 = check_volume(row)
 
+    total = (
+        (config.WEIGHT_TREND if c1 else 0)
+        + (config.WEIGHT_CROSSOVER if c2 else 0)
+        + (config.WEIGHT_MACD if c3 else 0)
+        + (config.WEIGHT_RSI if c4 else 0)
+        + (config.WEIGHT_VOLUME if c5 else 0)
+    )
 
-def score_volatility(row) -> float:
-    # Lower relative volatility (ATR as % of price) scores higher — caps
-    # out at 4% ATR/price, which is already a choppy, hard-to-manage stock.
-    atr_pct = row["atr_pct"]
-    if np.isnan(atr_pct):
-        return 0.0
-    scaled = max(0.0, 1 - min(atr_pct / 0.04, 1.0))
-    return scaled * config.WEIGHT_VOLATILITY
+    rsi_flag = ""
+    if row["rsi"] >= config.RSI_ZONE_MAX - 2:
+        rsi_flag = "near ceiling — approaching overbought"
+    elif row["rsi"] <= config.RSI_ZONE_MIN + 5:
+        rsi_flag = "near floor"
 
-
-def score_support_resistance(row) -> float:
-    """
-    Checks distance to the 52-week high — a classic resistance level.
-      - At or above the 52-week high: fresh breakout, full points.
-      - Within 2% below it, but hasn't broken through: caution — buying
-        right under an unbroken ceiling is riskier, low points.
-      - Further below: more room to run before hitting that ceiling,
-        scaled up to full points at 15%+ away.
-    """
-    high_52wk = row["fifty_two_wk_high"]
-    close = row["close"]
-    if pd.isna(high_52wk) or high_52wk <= 0:
-        return 0.0
-
-    if close >= high_52wk:
-        return config.WEIGHT_SUPPORT_RESISTANCE
-
-    distance_pct = (high_52wk - close) / high_52wk * 100
-    if distance_pct <= 2:
-        return config.WEIGHT_SUPPORT_RESISTANCE * 0.25
-
-    scaled = min(distance_pct / 15, 1.0)
-    return config.WEIGHT_SUPPORT_RESISTANCE * scaled
-
-
-def score_sector(sector_bullish: bool | None) -> float:
-    """
-    "Strong stocks usually belong to strong sectors." sector_bullish is
-    whether the ticker's matching sector ETF (XLK, XLF, etc.) is itself
-    trending up. If we don't know the sector (missing mapping or data
-    fetch failed), give half credit — don't punish a ticker for a data
-    gap that isn't about the stock itself.
-    """
-    if sector_bullish is None:
-        return config.WEIGHT_SECTOR * 0.5
-    return config.WEIGHT_SECTOR if sector_bullish else 0.0
-
-
-def compute_score(row, sector_bullish: bool | None = None) -> dict:
-    trend = score_trend(row)
-    volume = score_volume(row)
-    rsi = score_rsi(row)
-    volatility = score_volatility(row)
-    support_resistance = score_support_resistance(row)
-    sector = score_sector(sector_bullish)
-    total = round(trend + volume + rsi + volatility + support_resistance + sector, 1)
     return {
-        "total": total,
-        "trend": round(trend, 1),
-        "volume": round(volume, 1),
-        "rsi": round(rsi, 1),
-        "volatility": round(volatility, 1),
-        "support_resistance": round(support_resistance, 1),
-        "sector": round(sector, 1),
+        "total": round(total, 1),
+        "checks_passed": f"{sum([c1, c2, c3, c4, c5])}/5",
+        "trend": c1,
+        "crossover": c2,
+        "macd": c3,
+        "rsi": c4,
+        "volume": c5,
+        "rsi_value": round(row["rsi"], 2),
+        "rsi_flag": rsi_flag,
     }
 
 
 def trend_aligned(row) -> bool:
-    if row["sma_trend"] is None or np.isnan(row["sma_trend"]):
-        return False
-    return row["close"] > row["sma_trend"] and row["ema_fast"] > row["ema_slow"]
+    return check_trend(row) and check_crossover(row)
 
 
 def trend_flipped(row) -> bool:
-    return row["ema_fast"] < row["ema_slow"]
+    return row["ema9"] < row["ema20"]
 
 
 def entry_stop_target(row) -> dict:
@@ -134,18 +105,82 @@ def entry_stop_target(row) -> dict:
     return {"entry": round(entry, 2), "stop": round(stop, 2), "target": round(target, 2)}
 
 
+# --- Bearish (PUT WATCH) checks — mirror of the above ---
+
+def check_trend_bearish(row) -> bool:
+    if np.isnan(row["ema200"]):
+        return False
+    return row["close"] < row["ema200"]
+
+
+def check_crossover_bearish(row) -> bool:
+    return row["ema9"] < row["ema20"]
+
+
+def check_macd_bearish(row) -> bool:
+    if np.isnan(row["macd"]) or np.isnan(row["macd_signal"]):
+        return False
+    return row["macd"] < row["macd_signal"]
+
+
+def compute_score_bearish(row) -> dict:
+    c1 = check_trend_bearish(row)
+    c2 = check_crossover_bearish(row)
+    c3 = check_macd_bearish(row)
+    c4 = check_rsi(row)          # same zone — direction-agnostic
+    c5 = check_volume(row)       # same — direction-agnostic
+
+    total = (
+        (config.WEIGHT_TREND if c1 else 0)
+        + (config.WEIGHT_CROSSOVER if c2 else 0)
+        + (config.WEIGHT_MACD if c3 else 0)
+        + (config.WEIGHT_RSI if c4 else 0)
+        + (config.WEIGHT_VOLUME if c5 else 0)
+    )
+
+    return {
+        "total": round(total, 1),
+        "checks_passed": f"{sum([c1, c2, c3, c4, c5])}/5",
+        "trend": c1,
+        "crossover": c2,
+        "macd": c3,
+        "rsi": c4,
+        "volume": c5,
+        "rsi_value": round(row["rsi"], 2),
+    }
+
+
+def trend_aligned_bearish(row) -> bool:
+    return check_trend_bearish(row) and check_crossover_bearish(row)
+
+
+def trend_flipped_bearish(row) -> bool:
+    """True when a bearish setup should be considered invalidated —
+    momentum has turned back up."""
+    return row["ema9"] > row["ema20"]
+
+
+def entry_stop_target_bearish(row) -> dict:
+    # Mirror of entry_stop_target: stop sits ABOVE entry (price rising
+    # against a put), target sits BELOW entry (price falling in your favor).
+    entry = row["close"]
+    stop = entry + config.ATR_STOP_MULT * row["atr"]
+    target = entry - config.ATR_TARGET_MULT * row["atr"]
+    return {"entry": round(entry, 2), "stop": round(stop, 2), "target": round(target, 2)}
+
+
 def evaluate_ticker(ticker: str, row, held_position: dict = None, min_score: float = None,
-                     sector_bullish: bool = None) -> dict:
+                     min_put_score: float = None) -> dict:
     """
     row: latest indicator row for this ticker (pandas Series)
     held_position: dict from positions.json if currently held, else None
     min_score: overrides config.BUY_SCORE_MIN for this call (used by the
         market regime filter to raise the bar when SPY/QQQ are weak)
-    sector_bullish: whether this ticker's sector ETF is trending up
-        (None if unknown — see score_sector())
+    min_put_score: overrides config.PUT_SCORE_MIN for this call
     """
     min_score = config.BUY_SCORE_MIN if min_score is None else min_score
-    score = compute_score(row, sector_bullish=sector_bullish)
+    min_put_score = config.PUT_SCORE_MIN if min_put_score is None else min_put_score
+    score = compute_score(row)
 
     if held_position:
         # Already in this trade — check for an exit trigger
@@ -162,7 +197,7 @@ def evaluate_ticker(ticker: str, row, held_position: dict = None, min_score: flo
             }
         if trend_flipped(row):
             return {
-                "ticker": ticker, "signal": "SELL", "reason": "the stock's short-term trend just turned down",
+                "ticker": ticker, "signal": "SELL", "reason": "EMA 9 crossed back below EMA 20 — trend flipped",
                 "score": score["total"], "current_price": round(current_price, 2),
             }
 
@@ -199,5 +234,24 @@ def evaluate_ticker(ticker: str, row, held_position: dict = None, min_score: flo
             "ticker": ticker, "signal": "BUY", "score": score["total"],
             "score_breakdown": score, "reward_risk_ratio": round(reward_risk_ratio, 2), **levels,
         }
+
+    # BUY didn't clear — check the mirrored bearish setup before giving up
+    if trend_aligned_bearish(row):
+        score_bearish = compute_score_bearish(row)
+        if score_bearish["total"] >= min_put_score:
+            raw_entry = row["close"]
+            raw_stop = raw_entry + config.ATR_STOP_MULT * row["atr"]
+            raw_target = raw_entry - config.ATR_TARGET_MULT * row["atr"]
+            raw_risk = raw_stop - raw_entry
+            raw_reward = raw_entry - raw_target
+            reward_risk_ratio = round(raw_reward / raw_risk, 4) if raw_risk > 0 else 0
+
+            if reward_risk_ratio >= config.MIN_REWARD_RISK_RATIO:
+                levels = entry_stop_target_bearish(row)
+                return {
+                    "ticker": ticker, "signal": "PUT WATCH", "score": score_bearish["total"],
+                    "score_breakdown": score_bearish,
+                    "reward_risk_ratio": round(reward_risk_ratio, 2), **levels,
+                }
 
     return {"ticker": ticker, "signal": "DO NOTHING", "score": score["total"]}

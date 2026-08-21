@@ -48,7 +48,7 @@ def get_sector_trends() -> dict:
         for etf in ALL_SECTOR_ETFS:
             try:
                 df = raw[etf].rename(columns=str.lower)[["open", "high", "low", "close", "volume"]].dropna()
-                if len(df) > config.SMA_TREND:
+                if len(df) > config.EMA_200:
                     df = add_indicators(df)
                     trends[etf] = trend_aligned(df.iloc[-1])
             except Exception:

@@ -1,8 +1,9 @@
 """
 indicators.py
-Computes the 5 inputs the coach uses: 20 EMA, 50 EMA, 200 SMA, ATR, and
-relative volume. Same math as the backtest engine, kept separate here so
-this project doesn't depend on cp-rules-backtest.
+Computes the inputs for Drew's 6-check swing system: EMA 9, EMA 20,
+EMA 200, MACD (line + signal), RSI, ATR, and relative volume. Same math
+as the TradingView Overlay/Momentum Toolkit indicators, so a ticker's
+score here should match what Drew would read by hand on the chart.
 """
 import numpy as np
 import pandas as pd
@@ -13,10 +14,18 @@ import config
 def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
-    df["sma_trend"] = df["close"].rolling(config.SMA_TREND).mean()
-    df["ema_fast"] = df["close"].ewm(span=config.EMA_FAST, adjust=False).mean()
-    df["ema_slow"] = df["close"].ewm(span=config.EMA_SLOW, adjust=False).mean()
+    # Check 1 & 2 inputs: EMA stack
+    df["ema9"] = df["close"].ewm(span=config.EMA_9, adjust=False).mean()
+    df["ema20"] = df["close"].ewm(span=config.EMA_20, adjust=False).mean()
+    df["ema200"] = df["close"].ewm(span=config.EMA_200, adjust=False).mean()
 
+    # Check 3 input: MACD (line above/below signal)
+    ema_fast_macd = df["close"].ewm(span=config.MACD_FAST, adjust=False).mean()
+    ema_slow_macd = df["close"].ewm(span=config.MACD_SLOW, adjust=False).mean()
+    df["macd"] = ema_fast_macd - ema_slow_macd
+    df["macd_signal"] = df["macd"].ewm(span=config.MACD_SIGNAL, adjust=False).mean()
+
+    # Check 4 input: RSI
     delta = df["close"].diff()
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
@@ -26,6 +35,11 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["rsi"] = 100 - (100 / (1 + rs))
     df["rsi"] = df["rsi"].fillna(50)
 
+    # Check 5 input: relative volume
+    df["vol_avg"] = df["volume"].rolling(config.RELVOL_PERIOD).mean()
+    df["rel_vol"] = df["volume"] / df["vol_avg"]
+
+    # Check 6 (informational, not scored): ATR, for stop/target sizing
     prev_close = df["close"].shift(1)
     tr = pd.concat([
         df["high"] - df["low"],
@@ -33,12 +47,5 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
         (df["low"] - prev_close).abs(),
     ], axis=1).max(axis=1)
     df["atr"] = tr.ewm(alpha=1 / config.ATR_PERIOD, adjust=False).mean()
-    df["atr_pct"] = df["atr"] / df["close"]  # volatility relative to price, for cross-ticker comparison
-
-    df["vol_avg"] = df["volume"].rolling(config.RELVOL_PERIOD).mean()
-    df["rel_vol"] = df["volume"] / df["vol_avg"]
-
-    # 52-week high, for the support/resistance check (Upgrade #3)
-    df["fifty_two_wk_high"] = df["close"].rolling(252, min_periods=200).max()
 
     return df
