@@ -15,11 +15,17 @@ LOOKBACK_DAYS = 300              # enough history for a 200-day SMA + buffer
 BATCH_SIZE = 100                 # tickers per yfinance batch download
 
 # --- Indicators ---
-EMA_FAST = 20
-EMA_SLOW = 9
-SMA_TREND = 200
+# Matches Drew's TradingView 6-check swing checklist exactly.
+EMA_9 = 9
+EMA_20 = 20
+EMA_200 = 200
+MACD_FAST = 12
+MACD_SLOW = 26
+MACD_SIGNAL = 9
 ATR_PERIOD = 14
 RSI_PERIOD = 14
+RSI_ZONE_MIN = 40
+RSI_ZONE_MAX = 65
 RELVOL_PERIOD = 20
 
 # --- Signal thresholds ---
@@ -52,14 +58,15 @@ ATR_TARGET_MULT = 3.0            # gives roughly 1.5:1 reward-to-risk (see score
 MIN_REWARD_RISK_RATIO = 1.5
 
 # --- Scoring weights (must sum to 100) ---
-# Rebalanced again for Upgrade #4 (sector strength) — took a bit from
-# trend/volume/RSI rather than disturbing support/resistance again.
-WEIGHT_TREND = 30
-WEIGHT_VOLUME = 12
-WEIGHT_RSI = 13
-WEIGHT_VOLATILITY = 15
-WEIGHT_SUPPORT_RESISTANCE = 20
-WEIGHT_SECTOR = 10
+# Replaced with Drew's TradingView 6-check swing system (2026-08-20).
+# 5 scored checks, 20pts each. ATR is the 6th check but is informational
+# only (used for stop/target sizing below, not for the score itself) —
+# same as how Drew reads it on the chart.
+WEIGHT_TREND = 20        # Check 1: price above EMA 200
+WEIGHT_CROSSOVER = 20    # Check 2: EMA 9 above EMA 20
+WEIGHT_MACD = 20         # Check 3: MACD line above signal line
+WEIGHT_RSI = 20          # Check 4: RSI in the 40-65 zone
+WEIGHT_VOLUME = 20       # Check 5: today's volume above 30-day average
 
 # --- Position tracking ---
 POSITIONS_FILE = "positions.json"
