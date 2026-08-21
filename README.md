@@ -12,10 +12,13 @@ wasn't worth it yet). This is the coach — a decision-support tool, not a
 trading system.
 
 Three checks, three purposes:
-- **`premarket.py`** (before open, ~7-8 AM ET) — awareness only, no scoring.
-  Flags any S&P 500 ticker moving 3%+ before the bell.
-- **`midday.py`** (midday, ~12 PM ET) — same lightweight movers check,
-  partway through the trading day.
+- **`premarket.py`** (before open, ~6:00 AM ET) — re-runs your 6-check
+  (minus Volume — too thin pre-market to compare) using the current
+  pre-market price. Shows which tickers are already clearing the
+  checklist before the bell. Not a BUY signal — an early read using an
+  estimated price, confirm against `scan.py` after close.
+- **`midday.py`** (midday, ~12 PM ET) — currently disabled. Lightweight
+  movers check (3%+ moves), separate from the checklist scoring.
 - **`scan.py`** (after close, ~4-5 PM ET) — the main event. Full
   BUY/SELL/HOLD/DO NOTHING signals with entry/stop/target and a
   confidence score, checked against market trend, reward:risk, and

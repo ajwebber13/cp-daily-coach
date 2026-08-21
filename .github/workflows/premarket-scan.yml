@@ -1,12 +1,12 @@
-name: Pre-Market Movers
+name: Pre-Market 6-Check Watch
 
 on:
   schedule:
-    # 12:15 UTC = 7:15 AM ET during daylight saving (8:15 AM ET during
-    # standard time, since GitHub cron doesn't shift with DST). Gives you
-    # ~2 hours of pre-market data before the 9:30 AM ET open. Adjust the
-    # time below if you want it closer to open.
-    - cron: '15 12 * * 1-5'   # weekdays only
+    # 10:00 UTC = 6:00 AM ET during daylight saving (7:00 AM ET during
+    # standard time — GitHub cron doesn't shift with DST, so this drifts
+    # an hour later in winter unless you adjust it back to '0 11 * * 1-5').
+    # Gives you ~3.5 hours of pre-market data before the 9:30 AM ET open.
+    - cron: '0 10 * * 1-5'   # weekdays only
   workflow_dispatch: {}        # lets you trigger it manually from the Actions tab
 
 jobs:
