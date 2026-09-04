@@ -8,8 +8,27 @@ import requests
 import config
 
 
-def format_message(buy_signals: list, put_signals: list, held_signals: list, market_label: str = None) -> str:
+def format_coverage_line(covered: int, total: int) -> str:
+    """
+    Data-health canary shown at the top of every post. A total yfinance
+    outage would otherwise produce the exact same "nothing to report"
+    message as a genuinely quiet day — this makes that distinguishable.
+    """
+    if total <= 0:
+        return "⚠️ Data: 0/0 tickers — universe list came back empty"
+
+    pct = covered / total * 100
+    line = f"Data: {covered}/{total} tickers"
+    if pct < config.COVERAGE_WARN_PCT:
+        return f"⚠️ {line} ({pct:.0f}%) — below {config.COVERAGE_WARN_PCT}% coverage, results may be incomplete"
+    return line
+
+
+def format_message(buy_signals: list, put_signals: list, held_signals: list, market_label: str = None,
+                    coverage_line: str = None) -> str:
     lines = ["**📊 Daily Stock Coach**"]
+    if coverage_line:
+        lines.append(coverage_line)
     if market_label:
         lines.append(market_label)
 

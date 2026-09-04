@@ -19,7 +19,7 @@ import universe
 import positions
 from indicators import add_indicators
 from scorer import evaluate_ticker
-from discord_alert import format_message, send_to_discord
+from discord_alert import format_message, format_coverage_line, send_to_discord
 from ai_reasoning import add_reasoning_to_results
 from options_overlay import add_options_to_results
 from market_regime import get_market_regime
@@ -74,6 +74,7 @@ def run_scan():
     print(f"Downloading data for {len(tickers)} tickers...")
     price_data = batch_download(tickers)
     print(f"Got usable data for {len(price_data)} of {len(tickers)} tickers.")
+    coverage_line = format_coverage_line(len(price_data), len(tickers))
 
     held = positions.list_positions()
 
@@ -131,7 +132,8 @@ def run_scan():
         add_reasoning_to_results(top_puts)
         add_reasoning_to_results(held_results)
 
-    message = format_message(top_buys, top_puts, held_results, market_label=regime["label"])
+    message = format_message(top_buys, top_puts, held_results, market_label=regime["label"],
+                              coverage_line=coverage_line)
     send_to_discord(message)
 
     print(f"\nDone. {len(top_buys)} BUY candidates, {len(top_puts)} PUT WATCH candidates, "
@@ -139,4 +141,11 @@ def run_scan():
 
 
 if __name__ == "__main__":
-    run_scan()
+    try:
+        run_scan()
+    except Exception as e:
+        try:
+            send_to_discord(f"⚠️ **Daily scan failed**: {e}")
+        except Exception:
+            pass  # don't let the failure notification itself mask the real error
+        raise

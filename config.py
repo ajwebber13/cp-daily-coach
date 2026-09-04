@@ -107,6 +107,12 @@ SIGNALS_OUTCOMES_FILE = "signals_outcomes.jsonl"
 GRADE_MIN_DAYS = 5    # don't bother grading a signal until it's at least this many trading days old
 GRADE_MAX_DAYS = 20   # ungraded past this many trading days without hitting target/stop -> expired_flat
 
+# --- Data-health canary ---
+# Shown at the top of every Discord post so a data outage looks different
+# from a genuinely quiet day instead of producing an identical "nothing
+# to report" message.
+COVERAGE_WARN_PCT = 90
+
 # --- Discord ---
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 

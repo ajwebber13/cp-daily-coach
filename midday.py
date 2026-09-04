@@ -14,7 +14,7 @@ import pandas as pd
 
 import config
 import universe
-from discord_alert import send_to_discord
+from discord_alert import send_to_discord, format_coverage_line
 
 
 def get_previous_closes(tickers: list) -> dict:
@@ -59,14 +59,19 @@ def get_premarket_prices(tickers: list) -> dict:
     return prices
 
 
-def find_movers(tickers: list) -> pd.DataFrame:
+def find_movers(tickers: list) -> tuple:
+    """Returns (movers_df, covered_count) — covered_count is how many
+    tickers had both a previous close and a current price, for the
+    data-health canary."""
     prev_close = get_previous_closes(tickers)
     current = get_premarket_prices(tickers)
 
     rows = []
+    covered = 0
     for ticker in tickers:
         if ticker not in prev_close or ticker not in current:
             continue
+        covered += 1
         pc, pm = prev_close[ticker], current[ticker]
         if pc <= 0:
             continue
@@ -79,11 +84,13 @@ def find_movers(tickers: list) -> pd.DataFrame:
                 "pct_change": round(pct_change, 2),
             })
 
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows), covered
 
 
-def format_midday_message(movers) -> str:
+def format_midday_message(movers, coverage_line: str = None) -> str:
     lines = ["**🕛 Midday Check-In**"]
+    if coverage_line:
+        lines.append(coverage_line)
 
     if movers.empty:
         lines.append(f"\nNothing has moved more than {config.PREMARKET_MOVE_THRESHOLD}% so far today.")
@@ -112,13 +119,21 @@ def run_midday_scan():
     tickers = universe.get_sp500_tickers()
 
     print(f"Checking today's movement so far for {len(tickers)} tickers...")
-    movers = find_movers(tickers)
+    movers, covered = find_movers(tickers)
+    coverage_line = format_coverage_line(covered, len(tickers))
 
-    message = format_midday_message(movers)
+    message = format_midday_message(movers, coverage_line=coverage_line)
     send_to_discord(message)
 
     print(f"\nDone. {len(movers)} tickers moved {config.PREMARKET_MOVE_THRESHOLD}%+ so far today.")
 
 
 if __name__ == "__main__":
-    run_midday_scan()
+    try:
+        run_midday_scan()
+    except Exception as e:
+        try:
+            send_to_discord(f"⚠️ **Midday scan failed**: {e}")
+        except Exception:
+            pass
+        raise

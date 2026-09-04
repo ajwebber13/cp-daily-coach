@@ -24,7 +24,7 @@ import config
 import universe
 from indicators import add_indicators
 from scorer import check_trend, check_crossover, check_macd, check_rsi, entry_stop_target
-from discord_alert import send_to_discord
+from discord_alert import send_to_discord, format_coverage_line
 from scan import batch_download
 
 
@@ -89,6 +89,7 @@ def run_premarket_scan():
     print(f"Downloading daily history for {len(tickers)} tickers...")
     price_data = batch_download(tickers)
     print(f"Got usable data for {len(price_data)} of {len(tickers)} tickers.")
+    coverage_line = format_coverage_line(len(price_data), len(tickers))
 
     print(f"Fetching pre-market prices for {len(price_data)} tickers...")
     premarket_prices = get_premarket_prices(list(price_data.keys()))
@@ -118,14 +119,16 @@ def run_premarket_scan():
 
     watch_list.sort(key=lambda x: x["score"], reverse=True)
 
-    message = format_premarket_message(watch_list)
+    message = format_premarket_message(watch_list, coverage_line=coverage_line)
     send_to_discord(message)
 
     print(f"\nDone. {len(watch_list)} ticker(s) clearing the checklist pre-market.")
 
 
-def format_premarket_message(watch_list: list) -> str:
+def format_premarket_message(watch_list: list, coverage_line: str = None) -> str:
     lines = ["**🌅 Before the Market Opens — 6-Check Watch List**"]
+    if coverage_line:
+        lines.append(coverage_line)
     lines.append(
         "_Estimated from the current pre-market price. Volume isn't scored "
         "here (too thin before the open) — this is Trend/Crossover/MACD/RSI "
@@ -148,4 +151,11 @@ def format_premarket_message(watch_list: list) -> str:
 
 
 if __name__ == "__main__":
-    run_premarket_scan()
+    try:
+        run_premarket_scan()
+    except Exception as e:
+        try:
+            send_to_discord(f"⚠️ **Pre-market scan failed**: {e}")
+        except Exception:
+            pass
+        raise
