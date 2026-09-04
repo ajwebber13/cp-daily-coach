@@ -17,8 +17,9 @@ Three checks, three purposes:
   pre-market price. Shows which tickers are already clearing the
   checklist before the bell. Not a BUY signal — an early read using an
   estimated price, confirm against `scan.py` after close.
-- **`midday.py`** (midday, ~12 PM ET) — currently disabled. Lightweight
-  movers check (3%+ moves), separate from the checklist scoring.
+- **`midday.py`** (midday, ~12 PM ET) — lightweight movers check (3%+
+  moves), separate from the checklist scoring. No BUY/SELL/HOLD, just
+  what's moving so far today.
 - **`scan.py`** (after close, ~4-5 PM ET) — the main event. Full
   BUY/SELL/HOLD/DO NOTHING signals with entry/stop/target and a
   confidence score, checked against market trend, reward:risk, and
@@ -46,10 +47,16 @@ secret if you later automate the run — see below.)
 python scan.py
 ```
 
-First run downloads and caches the S&P 500 list (~500 tickers, re-checked
-weekly), then pulls ~300 days of price history for each in batches. Takes a
-couple minutes the first time. Posts results to Discord (or prints to your
-terminal if `DISCORD_WEBHOOK_URL` isn't set).
+The S&P 500 ticker list comes from a static CSV bundled with the repo
+(`sp500_static.csv`) — no network call needed on a normal run. It goes
+stale slowly (a handful of index changes a year); refresh it every few
+months with `python universe.py --refresh`, which pulls a fresh list and
+falls back to the existing static file if the refresh fails for any
+reason. It's not refreshed automatically.
+
+Each run pulls ~300 days of price history per ticker in batches — takes a
+couple minutes. Posts results to Discord (or prints to your terminal if
+`DISCORD_WEBHOOK_URL` isn't set).
 
 ## Tracking positions
 
@@ -68,6 +75,44 @@ remove it:
 python positions.py remove NVDA
 python positions.py list
 ```
+
+`add` and `remove` automatically commit and push `positions.json` right
+after saving it, so the cloud-scheduled scan (which starts from a fresh
+checkout every run) sees it on its next run. If git isn't available or
+the push fails for any reason, it saves locally and prints a warning
+telling you to push manually — it never blocks you from recording the
+trade.
+
+## Outcome tracking
+
+Every BUY/PUT WATCH signal that gets posted is logged to
+`signals_log.jsonl` (date, ticker, signal, score, entry, stop, target,
+reward:risk) — see `signals_log.py`. This is the coach's only record of
+what it actually told you to consider, and the only way to answer "does
+this thing work?"
+
+`grade_signals.py` grades each logged signal once it's at least 5 trading
+days old, checking the price history since it posted to see whether
+target or stop was touched first. Outcomes:
+
+| Outcome | Meaning |
+|---|---|
+| `hit_target` | Target touched before stop |
+| `hit_stop` | Stop touched before target (or both same day — daily bars can't tell which came first, so this is the conservative call) |
+| `expired_flat` | Neither touched within 20 trading days |
+| `open` | At least 5 trading days old, still under 20, nothing touched yet |
+
+Results go to a separate `signals_outcomes.jsonl` (keyed by
+date+ticker+signal) rather than rewriting the raw log, so grading can
+never corrupt the original record. A weekly workflow
+(`.github/workflows/grade-signals.yml`, Sundays) runs the grader and
+posts a hit-rate / average-R rollup to Discord, split by BUY vs
+PUT WATCH.
+
+Signal tracking starts from whenever this was added — there's no
+history to backfill from before it (the raw entry/stop/target values
+only ever existed in the Discord message itself, which nothing else
+recorded).
 
 ## AI reasoning (optional)
 
@@ -136,8 +181,9 @@ Runs automatically on GitHub's servers, no need to keep your own PC on.
 4. To test it immediately instead of waiting: go to the **Actions** tab →
    **Daily Stock Coach** → **Run workflow**.
 
-`positions.json` gets committed back to the repo automatically after each
-run, so HOLD/SELL tracking persists between runs.
+`positions.json` and `signals_log.jsonl` get committed back to the repo
+automatically after each run, so HOLD/SELL tracking and signal history
+both persist between runs.
 
 ## Automating the daily run (Windows Task Scheduler — local alternative)
 
@@ -149,16 +195,23 @@ schtasks /create /tn "CP Daily Coach" /tr "python C:\path\to\scan.py" /sc daily 
 ## Files
 
 ```
-config.py          - all tunable settings (weights, thresholds, universe)
-universe.py         - fetches + caches the S&P 500 ticker list
-indicators.py        - EMA/SMA/RSI/ATR/volume calculations
-scorer.py             - confidence scoring + BUY/SELL/HOLD/DO NOTHING logic
-positions.py           - tracks what you're actually holding
-discord_alert.py        - formats and sends the daily message
-scan.py                  - main entry point, run this daily (after close)
-premarket.py              - pre-market movers scan, run before open
-midday.py                  - midday movers check-in
-test_synthetic.py         - sanity check with fake data, no network needed
+config.py           - all tunable settings (weights, thresholds, universe)
+universe.py          - loads the S&P 500 ticker list (static, optional --refresh)
+indicators.py        - EMA/MACD/RSI/ATR/volume calculations
+scorer.py            - confidence scoring + BUY/SELL/HOLD/PUT WATCH/DO NOTHING logic
+market_regime.py     - checks SPY/QQQ trend, raises the bar in a weak market
+earnings_check.py    - skips candidates with earnings coming up soon
+options_overlay.py   - suggests a liquid call/put contract for BUY/PUT WATCH picks
+ai_reasoning.py       - optional plain-language explanation via Gemini
+positions.py          - tracks what you're actually holding
+signals_log.py         - logs every posted BUY/PUT WATCH signal for later grading
+grade_signals.py        - grades logged signals, posts a weekly hit-rate rollup
+discord_alert.py         - formats and sends messages, coverage canary
+scan.py                   - main entry point, run this daily (after close)
+premarket.py               - 6-check pre-market watch list, run before open
+midday.py                   - midday movers check-in
+test_synthetic.py            - scorer/positions sanity check, no network needed
+test_grade_signals.py         - grade_signals sanity check, no network needed
 ```
 
 ## Disclaimer
