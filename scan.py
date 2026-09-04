@@ -14,12 +14,14 @@ import sys
 
 import pandas as pd
 
+import time
+
 import config
 import universe
 import positions
-from indicators import add_indicators
+from indicators import add_indicators, build_chart_snapshot, levels_caution
 from scorer import evaluate_ticker
-from discord_alert import format_message, format_coverage_line, send_to_discord
+from discord_alert import format_message, format_coverage_line, format_signal_card, send_to_discord
 from ai_reasoning import add_reasoning_to_results
 from options_overlay import add_options_to_results
 from market_regime import get_market_regime
@@ -81,6 +83,7 @@ def run_scan():
     buy_candidates = []
     put_candidates = []
     held_results = []
+    signal_dfs = {}  # ticker -> indicator-enriched df, for BUY/PUT WATCH candidates only (chart cards/images)
 
     for ticker, df in price_data.items():
         df = add_indicators(df)
@@ -96,10 +99,18 @@ def run_scan():
         else:
             result = evaluate_ticker(ticker, latest_row, held_position=None, min_score=min_score,
                                       min_put_score=min_put_score)
-            if result["signal"] == "BUY":
-                buy_candidates.append(result)
-            elif result["signal"] == "PUT WATCH":
-                put_candidates.append(result)
+            if result["signal"] in ("BUY", "PUT WATCH"):
+                chart = build_chart_snapshot(df)
+                result["chart"] = chart
+                result["levels_caution"] = levels_caution(
+                    result["signal"], result["entry"], result["target"], chart["atr"],
+                    chart["resistance"], chart["support"], chart["low_52w"], chart["high_52w"],
+                )
+                signal_dfs[ticker] = df
+                if result["signal"] == "BUY":
+                    buy_candidates.append(result)
+                else:
+                    put_candidates.append(result)
 
     buy_candidates.sort(key=lambda x: x["score"], reverse=True)
     put_candidates.sort(key=lambda x: x["score"], reverse=True)
@@ -135,6 +146,12 @@ def run_scan():
     message = format_message(top_buys, top_puts, held_results, market_label=regime["label"],
                               coverage_line=coverage_line)
     send_to_discord(message)
+
+    all_signals = top_buys + top_puts
+    print(f"Posting {len(all_signals)} signal card(s) to Discord...")
+    for s in all_signals:
+        send_to_discord(format_signal_card(s))
+        time.sleep(0.5)  # space out webhook posts, same reasoning as options_overlay's yfinance throttle
 
     print(f"\nDone. {len(top_buys)} BUY candidates, {len(top_puts)} PUT WATCH candidates, "
           f"{len(held_results)} held positions checked.")

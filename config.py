@@ -28,6 +28,13 @@ SR_LOOKBACK_DAYS = 60   # window for swing-high/low support/resistance detection
 SR_SWING_ORDER = 3      # bars required on each side to confirm a swing point
 SR_MAX_LEVELS = 2        # nearest support/resistance levels shown, each side
 
+# --- Chart images (optional) ---
+# Off by default — rendering + uploading a PNG per signal adds real time
+# to the run. Only the top CHART_IMAGE_TOP_N signals (by score) get one.
+CHART_IMAGES = False
+CHART_IMAGE_BARS = 90
+CHART_IMAGE_TOP_N = 5
+
 # --- Signal thresholds ---
 BUY_SCORE_MIN = 70               # confidence score needed to flag a BUY
 TOP_N_RESULTS = 15               # how many BUY candidates to show, ranked by score
