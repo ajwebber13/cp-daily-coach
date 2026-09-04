@@ -50,7 +50,7 @@ def get_market_regime() -> dict:
         print(f"Market regime check failed ({e}). Defaulting to neutral (no adjustment).")
         return {
             "regime": "neutral", "spy_bullish": None, "qqq_bullish": None,
-            "score_adjustment": 0, "put_score_adjustment": 0,
+            "score_adjustment": 0,
             "label": "Unknown (check skipped)",
         }
 
@@ -58,20 +58,17 @@ def get_market_regime() -> dict:
         return {
             "regime": "bullish", "spy_bullish": True, "qqq_bullish": True,
             "score_adjustment": 0,
-            "put_score_adjustment": config.MARKET_BEARISH_PENALTY,
             "label": "🟢 Market is trending up (SPY & QQQ both healthy)",
         }
     elif not spy_bullish and not qqq_bullish:
         return {
             "regime": "bearish", "spy_bullish": False, "qqq_bullish": False,
             "score_adjustment": config.MARKET_BEARISH_PENALTY,
-            "put_score_adjustment": 0,
             "label": "🔴 Market is trending down (SPY & QQQ both weak) — being extra picky today",
         }
     else:
         return {
             "regime": "neutral", "spy_bullish": spy_bullish, "qqq_bullish": qqq_bullish,
             "score_adjustment": config.MARKET_MIXED_PENALTY,
-            "put_score_adjustment": config.MARKET_MIXED_PENALTY,
             "label": "🟡 Market is mixed (SPY and QQQ disagree) — being a bit more picky today",
         }

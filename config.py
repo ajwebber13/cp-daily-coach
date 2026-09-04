@@ -4,12 +4,6 @@ All tunable settings for the Daily Stock Coach.
 """
 import os
 
-# --- Universe ---
-# S&P 500, scanned fresh each run (cached locally, see universe.py)
-UNIVERSE_SOURCE = "sp500"
-UNIVERSE_CACHE_FILE = "sp500_tickers.csv"
-UNIVERSE_CACHE_DAYS = 7          # re-scrape the constituent list at most weekly
-
 # --- Data ---
 LOOKBACK_DAYS = 300              # enough history for a 200-day SMA + buffer
 BATCH_SIZE = 100                 # tickers per yfinance batch download
