@@ -12,7 +12,7 @@ breakdown (20 pts max each, must sum to 100 — see config.py to change):
   Check 2 - Crossover     - EMA 9 above EMA 20?
   Check 3 - MACD          - MACD line above its signal line?
   Check 4 - RSI            - RSI inside the 40-65 zone?
-  Check 5 - Volume          - today's volume above the 30-day average?
+  Check 5 - Volume          - today's volume above the 20-day average?
   Check 6 - ATR (not scored) - informational only, used to size the stop/target.
 
 Each check grades on THREE tiers, not just pass/fail — same distinction

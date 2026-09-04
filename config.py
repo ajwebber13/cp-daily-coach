@@ -66,7 +66,7 @@ WEIGHT_TREND = 20        # Check 1: price above EMA 200
 WEIGHT_CROSSOVER = 20    # Check 2: EMA 9 above EMA 20
 WEIGHT_MACD = 20         # Check 3: MACD line above signal line
 WEIGHT_RSI = 20          # Check 4: RSI in the 40-65 zone
-WEIGHT_VOLUME = 20       # Check 5: today's volume above 30-day average
+WEIGHT_VOLUME = 20       # Check 5: today's volume above 20-day average
 
 # --- Marginal-pass grading (2026-08-20) ---
 # A check that barely passes isn't as strong as one that passes clean —

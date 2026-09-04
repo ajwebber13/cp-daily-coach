@@ -104,7 +104,7 @@ the chart by hand. 0-100, five pass/fail checks worth 20 points each (see
 | Crossover | 20 | EMA 9 above EMA 20? |
 | MACD | 20 | MACD line above its signal line? |
 | RSI | 20 | RSI inside the 40-65 zone? |
-| Volume | 20 | Today's volume above the 30-day average? |
+| Volume | 20 | Today's volume above the 20-day average? |
 
 A 6th check — **ATR** — is informational only, not scored. It's used to
 size the stop (`entry - 2x ATR`) and target (`entry + 3x ATR`), same as
