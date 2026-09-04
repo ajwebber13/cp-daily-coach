@@ -1,7 +1,7 @@
 """
 scan.py
-Run this once a day (manually, or on a schedule — see README for the
-Windows Task Scheduler / cron setup). It:
+Run this once a day, after market close (manually, or on a schedule —
+see README for the Windows Task Scheduler / cron setup). It:
   1. Loads the S&P 500 universe (cached weekly)
   2. Downloads recent price history in batches
   3. Scores every ticker and checks your open positions

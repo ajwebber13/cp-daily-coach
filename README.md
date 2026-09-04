@@ -129,9 +129,10 @@ Runs automatically on GitHub's servers, no need to keep your own PC on.
 2. In the repo: **Settings → Secrets and variables → Actions → New repository secret**
    - Name: `DISCORD_WEBHOOK_URL`
    - Value: your webhook URL
-3. That's it. It runs weekdays at 21:00 UTC (4-5 PM ET, after market close)
-   and posts straight to Discord. Change the `cron` line in the workflow
-   file if you want a different time.
+3. That's it. It runs weekdays at 20:30/21:30 UTC (4:30 PM ET, after
+   market close — two cron lines cover both daylight saving and standard
+   time) and posts straight to Discord. Change the `cron` lines in the
+   workflow file if you want a different time.
 4. To test it immediately instead of waiting: go to the **Actions** tab →
    **Daily Stock Coach** → **Run workflow**.
 
