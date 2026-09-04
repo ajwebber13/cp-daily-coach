@@ -22,6 +22,12 @@ RSI_ZONE_MIN = 40
 RSI_ZONE_MAX = 65
 RELVOL_PERIOD = 20
 
+# --- Chart card (informational only — not part of the 6-check score) ---
+EMA_50 = 50
+SR_LOOKBACK_DAYS = 60   # window for swing-high/low support/resistance detection
+SR_SWING_ORDER = 3      # bars required on each side to confirm a swing point
+SR_MAX_LEVELS = 2        # nearest support/resistance levels shown, each side
+
 # --- Signal thresholds ---
 BUY_SCORE_MIN = 70               # confidence score needed to flag a BUY
 TOP_N_RESULTS = 15               # how many BUY candidates to show, ranked by score
