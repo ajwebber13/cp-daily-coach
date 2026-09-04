@@ -48,13 +48,21 @@ def explain_signal(result: dict) -> str | None:
 
     if signal == "BUY":
         breakdown = result.get("score_breakdown", {})
+        checks_passed = [
+            name for name, passed in (
+                ("trend (price above EMA 200)", breakdown.get("trend")),
+                ("crossover (EMA 9 above EMA 20)", breakdown.get("crossover")),
+                ("MACD (line above signal)", breakdown.get("macd")),
+                ("RSI in the 40-65 zone", breakdown.get("rsi")),
+                ("volume above average", breakdown.get("volume")),
+            ) if passed
+        ]
         user_prompt = (
-            f"{ticker} triggered a BUY signal. Score breakdown out of 100: "
-            f"trend {breakdown.get('trend')}/30, volume {breakdown.get('volume')}/12, "
-            f"RSI {breakdown.get('rsi')}/13, volatility {breakdown.get('volatility')}/15, "
-            f"room before 52-week high {breakdown.get('support_resistance')}/20, "
-            f"sector strength {breakdown.get('sector')}/10 "
-            f"(total {result.get('score')}). Entry ${result.get('entry')}, "
+            f"{ticker} triggered a BUY signal. Checks passed: "
+            f"{', '.join(checks_passed) or 'none'} ({breakdown.get('checks_passed', '?')}). "
+            f"RSI value: {breakdown.get('rsi_value')}. "
+            f"Caution flags: {'; '.join(breakdown.get('flags', [])) or 'none'}. "
+            f"Score: {result.get('score')}/100. Entry ${result.get('entry')}, "
             f"stop ${result.get('stop')}, target ${result.get('target')}. "
             f"Explain why this setup scored well."
         )
