@@ -24,6 +24,7 @@ from ai_reasoning import add_reasoning_to_results
 from options_overlay import add_options_to_results
 from market_regime import get_market_regime
 from earnings_check import filter_imminent_earnings
+from signals_log import log_signals
 
 
 def batch_download(tickers: list) -> dict:
@@ -115,6 +116,9 @@ def run_scan():
 
     top_buys = clear_of_earnings[:config.TOP_N_RESULTS]
     top_puts = clear_puts_of_earnings[:config.TOP_N_PUT_RESULTS]
+
+    logged_count = log_signals(top_buys, top_puts)
+    print(f"Logged {logged_count} signal(s) to {config.SIGNALS_LOG_FILE} for later grading.")
 
     if config.OPTIONS_OVERLAY_ENABLED:
         print("Checking options liquidity for top picks...")

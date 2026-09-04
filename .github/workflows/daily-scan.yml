@@ -30,15 +30,13 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python scan.py
 
-      - name: Commit updated positions.json
+      - name: Commit updated positions.json and signals_log.jsonl
         run: |
           git config user.name "cp-daily-coach-bot"
           git config user.email "actions@users.noreply.github.com"
 
-          if [ -f positions.json ]; then
-            git add positions.json
-            git diff --cached --quiet && echo "No position changes to commit" || git commit -m "Update positions.json [automated]"
-            git push
-          else
-            echo "positions.json does not exist yet — nothing to commit."
-          fi
+          [ -f positions.json ] && git add positions.json
+          [ -f signals_log.jsonl ] && git add signals_log.jsonl
+
+          git diff --cached --quiet && echo "No changes to commit" || git commit -m "Update positions.json / signals_log.jsonl [automated]"
+          git push

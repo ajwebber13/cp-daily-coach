@@ -1,0 +1,40 @@
+name: Weekly Signal Grading
+
+on:
+  schedule:
+    # 15:00 UTC Sunday = 10/11 AM ET, well clear of any market-hours drift
+    - cron: '0 15 * * 0'
+  workflow_dispatch: {}
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Grade signals and post rollup
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python grade_signals.py
+
+      - name: Commit updated signals_outcomes.json
+        run: |
+          git config user.name "cp-daily-coach-bot"
+          git config user.email "actions@users.noreply.github.com"
+
+          if [ -f signals_outcomes.jsonl ]; then
+            git add signals_outcomes.jsonl
+            git diff --cached --quiet && echo "No outcome changes to commit" || git commit -m "Update signals_outcomes.jsonl [automated]"
+            git push
+          else
+            echo "signals_outcomes.jsonl does not exist yet — nothing to commit."
+          fi

@@ -97,6 +97,16 @@ OPTIONS_TARGET_MONEYNESS = 0.05
 OPTIONS_MAX_STRIKE_DRIFT_PCT = 0.05   # reject if closest liquid strike is >5% of target away
 OPTIONS_VOL_LOOKBACK_DAYS = 30
 
+# --- Outcome tracking ---
+# Every BUY/PUT WATCH shown to Discord gets appended to SIGNALS_LOG_FILE
+# (see signals_log.py). grade_signals.py later checks whether each one
+# hit its target, hit its stop, or expired flat, and writes the result to
+# SIGNALS_OUTCOMES_FILE (kept separate so the raw log stays append-only).
+SIGNALS_LOG_FILE = "signals_log.jsonl"
+SIGNALS_OUTCOMES_FILE = "signals_outcomes.jsonl"
+GRADE_MIN_DAYS = 5    # don't bother grading a signal until it's at least this many trading days old
+GRADE_MAX_DAYS = 20   # ungraded past this many trading days without hitting target/stop -> expired_flat
+
 # --- Discord ---
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 
