@@ -24,6 +24,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Run tests
+        run: |
+          python test_synthetic.py
+          python test_grade_signals.py
+
       - name: Run daily scan
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
