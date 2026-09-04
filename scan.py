@@ -21,12 +21,14 @@ import universe
 import positions
 from indicators import add_indicators, build_chart_snapshot, levels_caution
 from scorer import evaluate_ticker
-from discord_alert import format_message, format_coverage_line, format_signal_card, send_to_discord
+from discord_alert import format_message, format_coverage_line, format_signal_card, send_to_discord, \
+    send_to_discord_with_image
 from ai_reasoning import add_reasoning_to_results
 from options_overlay import add_options_to_results
 from market_regime import get_market_regime
 from earnings_check import filter_imminent_earnings
 from signals_log import log_signals
+from chart_image import render_chart
 
 
 def batch_download(tickers: list) -> dict:
@@ -148,9 +150,26 @@ def run_scan():
     send_to_discord(message)
 
     all_signals = top_buys + top_puts
+    chart_tickers = set()
+    if config.CHART_IMAGES and all_signals:
+        # Top N by score across BUY + PUT WATCH combined, not top N of
+        # each — keeps the number of rendered images bounded regardless
+        # of how many signals cleared today.
+        ranked = sorted(all_signals, key=lambda s: s["score"], reverse=True)
+        chart_tickers = {s["ticker"] for s in ranked[:config.CHART_IMAGE_TOP_N]}
+
     print(f"Posting {len(all_signals)} signal card(s) to Discord...")
     for s in all_signals:
-        send_to_discord(format_signal_card(s))
+        card = format_signal_card(s)
+        image = None
+        if s["ticker"] in chart_tickers:
+            df = signal_dfs.get(s["ticker"])
+            if df is not None:
+                image = render_chart(df, s["ticker"], title=f"{s['ticker']} — {s['signal']}")
+        if image:
+            send_to_discord_with_image(card, image, filename=f"{s['ticker']}_chart.png")
+        else:
+            send_to_discord(card)
         time.sleep(0.5)  # space out webhook posts, same reasoning as options_overlay's yfinance throttle
 
     print(f"\nDone. {len(top_buys)} BUY candidates, {len(top_puts)} PUT WATCH candidates, "
