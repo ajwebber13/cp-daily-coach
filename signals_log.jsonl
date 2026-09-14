@@ -1,0 +1,29 @@
+{"date": "2026-09-14", "ticker": "AMD", "signal": "BUY", "score": 80, "entry": 484.96, "stop": 437.8, "target": 555.7, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "MO", "signal": "BUY", "score": 80, "entry": 70.77, "stop": 67.78, "target": 75.26, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "CDW", "signal": "BUY", "score": 80, "entry": 150.93, "stop": 137.5, "target": 171.08, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "CNC", "signal": "BUY", "score": 80, "entry": 68.17, "stop": 63.52, "target": 75.15, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "CF", "signal": "BUY", "score": 80, "entry": 135.21, "stop": 124.72, "target": 150.94, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "C", "signal": "BUY", "score": 80, "entry": 136.04, "stop": 129.87, "target": 145.3, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "GLW", "signal": "BUY", "score": 80, "entry": 151.02, "stop": 132.84, "target": 178.29, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "CRWD", "signal": "BUY", "score": 80, "entry": 227.36, "stop": 203.37, "target": 263.35, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "DELL", "signal": "BUY", "score": 80, "entry": 532.0, "stop": 464.46, "target": 633.31, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "FFIV", "signal": "BUY", "score": 80, "entry": 411.61, "stop": 385.88, "target": 450.2, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "HPE", "signal": "BUY", "score": 80, "entry": 55.93, "stop": 48.45, "target": 67.15, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "INTC", "signal": "BUY", "score": 80, "entry": 96.39, "stop": 85.11, "target": 113.29, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "HOOD", "signal": "BUY", "score": 80, "entry": 114.85, "stop": 102.28, "target": 133.71, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "SNDK", "signal": "BUY", "score": 80, "entry": 1538.58, "stop": 1299.12, "target": 1897.77, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "ADBE", "signal": "PUT WATCH", "score": 80, "entry": 259.83, "stop": 281.66, "target": 227.07, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "CHTR", "signal": "PUT WATCH", "score": 80, "entry": 144.76, "stop": 159.9, "target": 122.05, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "CMCSA", "signal": "PUT WATCH", "score": 80, "entry": 25.3, "stop": 26.69, "target": 23.2, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "CSGP", "signal": "PUT WATCH", "score": 80, "entry": 30.99, "stop": 33.64, "target": 27.01, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "ERIE", "signal": "PUT WATCH", "score": 80, "entry": 251.05, "stop": 268.15, "target": 225.41, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "FIS", "signal": "PUT WATCH", "score": 80, "entry": 39.48, "stop": 42.21, "target": 35.38, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "FISV", "signal": "PUT WATCH", "score": 80, "entry": 52.53, "stop": 56.27, "target": 46.91, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "HSY", "signal": "PUT WATCH", "score": 80, "entry": 176.15, "stop": 184.07, "target": 164.25, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "INTU", "signal": "PUT WATCH", "score": 80, "entry": 339.63, "stop": 369.42, "target": 294.95, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "LDOS", "signal": "PUT WATCH", "score": 80, "entry": 132.96, "stop": 140.98, "target": 120.92, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "NOC", "signal": "PUT WATCH", "score": 80, "entry": 531.26, "stop": 555.19, "target": 495.36, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "NVR", "signal": "PUT WATCH", "score": 80, "entry": 6236.56, "stop": 6532.62, "target": 5792.46, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "OTIS", "signal": "PUT WATCH", "score": 80, "entry": 70.92, "stop": 73.76, "target": 66.64, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "SPGI", "signal": "PUT WATCH", "score": 80, "entry": 420.3, "stop": 444.1, "target": 384.6, "reward_risk": 1.5}
+{"date": "2026-09-14", "ticker": "VRSK", "signal": "PUT WATCH", "score": 80, "entry": 183.98, "stop": 197.23, "target": 164.1, "reward_risk": 1.5}
