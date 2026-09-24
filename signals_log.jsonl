@@ -507,3 +507,33 @@
 {"date": "2026-09-23", "ticker": "ALL", "signal": "PUT WATCH", "score": 80, "entry": 225.66, "stop": 238.4, "target": 206.55, "reward_risk": 1.5}
 {"date": "2026-09-23", "ticker": "AEP", "signal": "PUT WATCH", "score": 80, "entry": 118.4, "stop": 122.47, "target": 112.3, "reward_risk": 1.5}
 {"date": "2026-09-23", "ticker": "AXP", "signal": "PUT WATCH", "score": 80, "entry": 301.96, "stop": 315.09, "target": 282.27, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "BIIB", "signal": "BUY", "score": 90, "entry": 226.36, "stop": 214.47, "target": 244.19, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "FAST", "signal": "BUY", "score": 90, "entry": 50.73, "stop": 48.6, "target": 53.92, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "VTRS", "signal": "BUY", "score": 90, "entry": 17.42, "stop": 16.57, "target": 18.7, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "WAT", "signal": "BUY", "score": 90, "entry": 430.3, "stop": 407.17, "target": 464.99, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "AMD", "signal": "BUY", "score": 80, "entry": 629.26, "stop": 578.12, "target": 705.96, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "A", "signal": "BUY", "score": 80, "entry": 172.84, "stop": 162.93, "target": 187.7, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "AKAM", "signal": "BUY", "score": 80, "entry": 110.41, "stop": 99.15, "target": 127.3, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "MO", "signal": "BUY", "score": 80, "entry": 68.88, "stop": 66.04, "target": 73.13, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "AME", "signal": "BUY", "score": 80, "entry": 247.74, "stop": 237.02, "target": 263.81, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "ADI", "signal": "BUY", "score": 80, "entry": 382.61, "stop": 360.14, "target": 416.31, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "APA", "signal": "BUY", "score": 80, "entry": 43.68, "stop": 40.58, "target": 48.32, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "ANET", "signal": "BUY", "score": 80, "entry": 205.7, "stop": 189.75, "target": 229.62, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "BBY", "signal": "BUY", "score": 80, "entry": 91.0, "stop": 84.41, "target": 100.89, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "COHR", "signal": "BUY", "score": 80, "entry": 290.61, "stop": 248.92, "target": 353.14, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "DHR", "signal": "BUY", "score": 80, "entry": 223.77, "stop": 211.63, "target": 241.98, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "GEHC", "signal": "PUT WATCH", "score": 100, "entry": 66.38, "stop": 69.59, "target": 61.57, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "AZO", "signal": "PUT WATCH", "score": 90, "entry": 2861.75, "stop": 3017.48, "target": 2628.16, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "CBRE", "signal": "PUT WATCH", "score": 90, "entry": 136.53, "stop": 145.33, "target": 123.33, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "EQT", "signal": "PUT WATCH", "score": 90, "entry": 51.87, "stop": 54.77, "target": 47.52, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "ORCL", "signal": "PUT WATCH", "score": 90, "entry": 139.54, "stop": 154.21, "target": 117.53, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "AOS", "signal": "PUT WATCH", "score": 80, "entry": 57.7, "stop": 60.42, "target": 53.62, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "ALB", "signal": "PUT WATCH", "score": 80, "entry": 108.25, "stop": 118.63, "target": 92.69, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "LNT", "signal": "PUT WATCH", "score": 80, "entry": 63.31, "stop": 65.48, "target": 60.06, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "AEE", "signal": "PUT WATCH", "score": 80, "entry": 99.2, "stop": 102.49, "target": 94.27, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "AXP", "signal": "PUT WATCH", "score": 80, "entry": 305.66, "stop": 318.7, "target": 286.1, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "AMT", "signal": "PUT WATCH", "score": 80, "entry": 167.26, "stop": 175.34, "target": 155.13, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "AMP", "signal": "PUT WATCH", "score": 80, "entry": 485.15, "stop": 515.34, "target": 439.87, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "AON", "signal": "PUT WATCH", "score": 80, "entry": 276.09, "stop": 293.26, "target": 250.33, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "APO", "signal": "PUT WATCH", "score": 80, "entry": 120.69, "stop": 128.77, "target": 108.57, "reward_risk": 1.5}
+{"date": "2026-09-24", "ticker": "ARES", "signal": "PUT WATCH", "score": 80, "entry": 120.11, "stop": 129.21, "target": 106.46, "reward_risk": 1.5}
