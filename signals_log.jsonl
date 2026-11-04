@@ -2182,3 +2182,33 @@
 {"date": "2026-11-03", "ticker": "AMAT", "signal": "PUT WATCH", "score": 80, "entry": 374.53, "stop": 416.89, "target": 310.99, "reward_risk": 1.5}
 {"date": "2026-11-03", "ticker": "BG", "signal": "PUT WATCH", "score": 80, "entry": 94.22, "stop": 100.7, "target": 84.5, "reward_risk": 1.5}
 {"date": "2026-11-03", "ticker": "CAT", "signal": "PUT WATCH", "score": 80, "entry": 613.62, "stop": 673.07, "target": 524.44, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "ADI", "signal": "BUY", "score": 100, "entry": 419.79, "stop": 389.37, "target": 465.41, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "BALL", "signal": "BUY", "score": 100, "entry": 63.21, "stop": 59.74, "target": 68.41, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "BNY", "signal": "BUY", "score": 100, "entry": 149.31, "stop": 143.57, "target": 157.91, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "BRO", "signal": "BUY", "score": 100, "entry": 70.92, "stop": 66.41, "target": 77.69, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "CSX", "signal": "BUY", "score": 100, "entry": 50.72, "stop": 48.62, "target": 53.88, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "IEX", "signal": "BUY", "score": 100, "entry": 237.36, "stop": 225.97, "target": 254.44, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "KDP", "signal": "BUY", "score": 100, "entry": 34.74, "stop": 32.88, "target": 37.53, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "LYB", "signal": "BUY", "score": 100, "entry": 66.09, "stop": 61.79, "target": 72.53, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "PFE", "signal": "BUY", "score": 100, "entry": 30.0, "stop": 28.73, "target": 31.9, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "PGR", "signal": "BUY", "score": 100, "entry": 229.11, "stop": 219.05, "target": 244.2, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "PRU", "signal": "BUY", "score": 100, "entry": 118.81, "stop": 114.12, "target": 125.84, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "DGX", "signal": "BUY", "score": 100, "entry": 247.06, "stop": 234.38, "target": 266.08, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "SJM", "signal": "BUY", "score": 100, "entry": 127.98, "stop": 121.45, "target": 137.78, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "SYF", "signal": "BUY", "score": 100, "entry": 75.18, "stop": 71.31, "target": 80.98, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "VRTX", "signal": "BUY", "score": 100, "entry": 530.76, "stop": 496.7, "target": 581.85, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "ETN", "signal": "PUT WATCH", "score": 100, "entry": 391.7, "stop": 425.79, "target": 340.57, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "HUBB", "signal": "PUT WATCH", "score": 100, "entry": 449.27, "stop": 479.76, "target": 403.54, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "ON", "signal": "PUT WATCH", "score": 100, "entry": 72.6, "stop": 80.04, "target": 61.44, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "ESS", "signal": "PUT WATCH", "score": 90, "entry": 264.9, "stop": 276.36, "target": 247.7, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "ORCL", "signal": "PUT WATCH", "score": 90, "entry": 126.19, "stop": 142.26, "target": 102.08, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "APTV", "signal": "PUT WATCH", "score": 80, "entry": 41.34, "stop": 44.31, "target": 36.88, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "ADM", "signal": "PUT WATCH", "score": 80, "entry": 70.6, "stop": 75.14, "target": 63.79, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "BKNG", "signal": "PUT WATCH", "score": 80, "entry": 155.67, "stop": 166.66, "target": 139.19, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "BG", "signal": "PUT WATCH", "score": 80, "entry": 94.72, "stop": 101.32, "target": 84.83, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "CIEN", "signal": "PUT WATCH", "score": 80, "entry": 300.08, "stop": 352.85, "target": 220.93, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "COIN", "signal": "PUT WATCH", "score": 80, "entry": 145.45, "stop": 166.33, "target": 114.13, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "FIX", "signal": "PUT WATCH", "score": 80, "entry": 1285.13, "stop": 1456.5, "target": 1028.07, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "DASH", "signal": "PUT WATCH", "score": 80, "entry": 183.32, "stop": 201.62, "target": 155.87, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "EME", "signal": "PUT WATCH", "score": 80, "entry": 707.43, "stop": 762.78, "target": 624.4, "reward_risk": 1.5}
+{"date": "2026-11-04", "ticker": "FFIV", "signal": "PUT WATCH", "score": 80, "entry": 331.15, "stop": 371.18, "target": 271.11, "reward_risk": 1.5}
